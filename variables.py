@@ -1,0 +1,16 @@
+
+class Variables():
+        DATA_LINUX_SYZBOT_WORKDIR = "workdir/linux-syzbot"
+        DATA_LINUX_SYZBOT_REPORT_DIR = "reports/linux-syzbot"
+        DATA_LLVM_PROJECT_WORKDIR = "workdir/llvm-project"
+        DATA_LLVM_PROJECT_REPORT_DIR = "reports/llvm-project"
+        DATA_CODECHECKER_WORKDIR = "workdir/codechecker"
+        DATA_CODECHECKER_REPORT_DIR = "reports/codechecker"
+        DATA_JULIETTESTSUITE_WORKDIR = "workdir/julietTestSuite"
+        DATA_JULIETTESTSUITE_REPORT_DIR = "reports/julietTestSuite"
+        DATA_CGC_WORKDIR = "workdir/cgc"
+        DATA_CGC_REPORT_DIR = "reports/cgc"
+        DATA_MAGMA_WORKDIR = "workdir/magma"
+        DATA_MAGMA_REPORT_DIR = "reports/magma"
+        DATA_LINUX_WORKDIR = "workdir/linux"
+        DATA_LINUX_REPORT_DIR = "reports/linux"
