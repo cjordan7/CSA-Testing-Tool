@@ -4,6 +4,9 @@ import os
 from variables import Variables
 from sampleReadCSATable import getCWECheckerMapping
 
+from runCodeChecker import RunCodeChecker
+
+
 # This class represent only a bug (CWE) at a precise line of a file
 class Bug:
     def __init__(self, cwe, line, internetLink, idN, fileName, isOnlyWindows):
@@ -112,23 +115,20 @@ def addFlagsToFiles(bugsMappedInFile):
 
                     i += 1
 
-            #print(array)
-            #print(sortedBugs)
-            if len(array) != len(sortedBugs):
-                print(array)
-                print(sortedBugs)
-                #    raise NotImplementedError
-                #print(lines[30-1])
-
+            # Create the comment:
+            # // codechecker_confirmed [checkers] This is a bug."
             for tupl in array:
                 line, checkers = tupl
-                "".join(checker)
-
-            #print(lines[27-1])
-            #print(sortedBugs)
-            #print(bugs)
+                t = ", ".join(checkers)
+                t = "// codechecker_confirmed [" + t + "] This is a bug."
 
 
+            # TODO: Read and insert in files
+
+
+# We want to either omit the good code or the bad code for each test suites.
+# To do this we can use -DOMIT_GOOD or -DOMIT_BAD flags, but we need to set them out.
+# We could either change the Makefile, or we get the CFLAGS and add our own -Dvar.
 def getCFlags(path):
     f = open(path)
 
@@ -138,10 +138,22 @@ def getCFlags(path):
         if("CFLAGS =" in i):
             return i
 
-    return ""
+    return "CFLAGS ="
 
 
-addFlagsToFiles(getBugsAssociatedWithJulietTestSuite())
+def runCodeChecker(bugsMappedInFile):
+    print("Run codechecker for juliet test suite")
+    codeChecker = RunCodeChecker()
+
+    # TODO: for each that aren't windows only makefile
+    codeChecker.runInterceptBuild("/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/data/julietTestSuite/64340-v1.0.0", "make build")
+
+
+m = getBugsAssociatedWithJulietTestSuite()
+
+#addFlagsToFiles)
+
+runCodeChecker(m)
 
 #print(getCFlags('/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/julietTestSuite/62640-v1.0.0/Makefile'))
 

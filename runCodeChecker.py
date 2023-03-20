@@ -2,8 +2,9 @@ import subprocess
 
 
 class InterceptBuild():
-    def getInterceptBuildCommand(self, command):
-        return "intercept-build --override-compiler" + command + "CC=intercept-cc CXX=intercept-c++"
+    @staticmethod
+    def getInterceptBuildCommand(command):
+        return "intercept-build --override-compiler " + command + " CC=intercept-cc CXX=intercept-c++"
 
 
 class RunCodeChecker():
@@ -24,12 +25,20 @@ class RunCodeChecker():
     def parseOutput(self, path):
         return "CodeChecker parse --export html --output " + path + " ./reports"
 
-    def runInterceptBuild(self, path, runCommand):
-        result = subprocess.run(self.codeCheckerLog + runCommand, shell=True)
+    def runInterceptBuild(self, path, command):
+        #result = subprocess.run(self.codeCheckerLog + runCommand, shell=True)
 
         # TODO: Parse result for potential errors
-        if("debug" in result):
-            InterceptBuild.getInterceptBuildCommand()
+        #if("debug" in result):
+        interceptBuild = InterceptBuild.getInterceptBuildCommand(command)
+
+        # Make clean just in case
+        subprocess.run("make clean", shell=True, cwd=path)
+
+        # Create compilation database for CSA
+        subprocess.run(interceptBuild, shell=True, cwd=path)
+
+        print(result)
 
     def runCodeChecker(self, checkers):
         enableCheckers = " ".join(["-e " + i for i in checkers].join(" "))

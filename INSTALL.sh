@@ -1,5 +1,7 @@
 
 
+sudo apt-get update -y
+
 # Install Makefile, gcc, g++
 sudo apt-get -y install build-essential
 
@@ -14,8 +16,8 @@ sudo apt -y install git
 # Install ninja
 sudo apt-get -y install ninja-build
 
-# Install z3
-sudo apt-get -y install z3
+# Install python
+sudo apt -y install python3-pip
 
 # Install curl
 sudo apt -y install curl
@@ -42,10 +44,8 @@ sudo apt -y install curl
 # Special variables
 
 
-
 # Change all of this to make it more extensible
-declare -a arr=("linux-syzbot" "llvm-project" "codechecker" "julietTestSuite" "cgc"
-                "magma" "linux")
+declare -a arr=("linux-syzbot" "llvm-project" "codechecker" "julietTestSuite" "cgc" "magma" "linux" "z3")
 
 temp="class Variables():"
 for i in "${arr[@]}"
@@ -74,6 +74,11 @@ done
 echo "${temp}" > variables.py
 
 
+
+# Installing z3 from source because it seems the Ubuntu package doesn't install any libraries
+git clone -b 'z3-4.12.1' --single-branch https://github.com/Z3Prover/z3.git --depth 1 workdir/z3
+
+
 # TODO: Create a sub file for each of clone project??
 
 # Clone Magma
@@ -94,6 +99,9 @@ pushd
 cd workdir/llvm-project
 mkdir build
 cd build
+
+
+# TODO: Detect target automatically
 cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=yes ../llvm
 
 popd
