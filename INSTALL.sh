@@ -86,7 +86,7 @@ git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-proje
 
 # Clone Linux
 # We need to clone all of Linux for `git log`
-git clone https://github.com/torvalds/linux.git
+#git clone https://github.com/torvalds/linux.git
 
 # TODO: Give parameter to build from source
 # Build it
