@@ -82,7 +82,7 @@ pushd
 cd workdir/z3
 python3 scripts/mk_make.py
 cd build
-make
+make -j$(nproc)
 sudo make install
 popd
 
@@ -111,6 +111,8 @@ cd build
 
 # TODO: Detect target automatically
 cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=yes ../llvm
+
+ninja -j
 
 popd
 
