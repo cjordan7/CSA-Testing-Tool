@@ -78,6 +78,14 @@ echo "${temp}" > variables.py
 # Installing z3 from source because it seems the Ubuntu package doesn't install any libraries
 git clone -b 'z3-4.12.1' --single-branch https://github.com/Z3Prover/z3.git --depth 1 workdir/z3
 
+pushd
+cd workdir/z3
+python3 scripts/mk_make.py
+cd build
+make
+sudo make install
+popd
+
 
 # TODO: Create a sub file for each of clone project??
 
