@@ -1,6 +1,7 @@
 
 
 def getCWECheckerMapping():
+    print("Getting CWE - checkers mappings")
     csaTableMapped = dict()
     csaTable = open("data/csaCheckers.txt", "r")
     csaTableLines = csaTable.readlines()

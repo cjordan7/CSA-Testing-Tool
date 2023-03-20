@@ -1,24 +1,24 @@
 
 
 # Install Makefile, gcc, g++
-sudo apt-get install build-essential
+sudo apt-get -y install build-essential
 
 # Install cmake
-sudo apt-get libssl-dev
-sudo apt-get install cmake
+sudo apt-get -y libssl-dev
+sudo apt-get -y install cmake
 
 # Install git
-sudo apt install git-all
+sudo apt -y install git
 
 
 # Install ninja
-sudo apt-get install ninja-build
+sudo apt-get -y install ninja-build
 
 # Install z3
-sudo apt-get install z3
+sudo apt-get -y install z3
 
 # Install curl
-sudo apt install curl
+sudo apt -y install curl
 
 
 # File system
@@ -108,7 +108,7 @@ git clone https://github.com/GrammaTech/cgc-cbs workdir/cgc
 # Install mandatory dependencies for a development and analysis environment.
 # NOTE: clang or clang-tidy can be any sufficiently fresh version, and need not
 #       come from package manager!
-sudo apt-get install clang clang-tidy build-essential curl gcc-multilib \
+sudo apt-get install -y clang clang-tidy build-essential curl gcc-multilib \
       git python3-dev python3-venv
 
 # Install nodejs dependency for web. In case of Debian/Ubuntu you can use the

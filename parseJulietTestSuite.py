@@ -2,6 +2,7 @@ import json
 import os
 
 from variables import Variables
+from sampleReadCSATable import getCWECheckerMapping
 
 # This class represent only a bug (CWE) at a precise line of a file
 class Bug:
@@ -34,10 +35,14 @@ def getBugsAssociatedWithJulietTestSuite():
     #dirPath = os.getcwd()
     #sarifsPath = os.getcwd()
     #Variables.DATA_JULIETTESTSUITE_WORKDIR
+    print("JulietTestSuite: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
+
+    print("JulietTestSuite: Reading sarifs.json")
     f = open('/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/julietTestSuite/sarifs.json')
     d = json.load(f)
 
     bugsMappedInFile = dict()
+
 
     for i in range(0, len(d['testCases'])):
         for j in range(0, len(d['testCases'][i]['sarif']['runs'][0]['results'])):
@@ -71,6 +76,59 @@ def getBugsAssociatedWithJulietTestSuite():
     return bugsMappedInFile
 
 
+def addFlagsToFiles(bugsMappedInFile):
+    print("Adding Codechecker flags to each files")
+    mappings = getCWECheckerMapping()
+    base_dir = os.getcwd()
+    print(base_dir)
+    for filePath, bugs in bugsMappedInFile.items():
+        filename = filePath
+
+        # TODO: Replace that path with variable
+        newPath = os.path.join(base_dir, "workdir/julietTestSuite/julietTestSuite")
+        newPath = os.path.join(newPath, filename)
+        f = open(newPath)
+        #lines = f.readlines()
+        sortedBugs = sorted(bugs, reverse=True)
+
+        if(len(bugs) > 1):
+            lines = f.readlines()
+            array = []
+            i = 0
+            f = False
+            # TODO: create func
+            for bug in sortedBugs:
+                if(bug.cwe in mappings):
+                    f = True
+                    if(len(array) == 0):
+                        checkerSet = {mappings[bug.cwe]}
+                        array.append((bug.line, checkerSet))
+                    else:
+                        if(array[i-1][0] == bug.line):
+                            array[i-1][1].add(mappings[bug.cwe])
+                        else:
+                            checkerSet = {mappings[bug.cwe]}
+                            array.append((bug.line, checkerSet))
+
+                    i += 1
+
+            #print(array)
+            #print(sortedBugs)
+            if len(array) != len(sortedBugs):
+                print(array)
+                print(sortedBugs)
+                #    raise NotImplementedError
+                #print(lines[30-1])
+
+            for tupl in array:
+                line, checkers = tupl
+                "".join(checker)
+
+            #print(lines[27-1])
+            #print(sortedBugs)
+            #print(bugs)
+
+
 def getCFlags(path):
     f = open(path)
 
@@ -83,7 +141,9 @@ def getCFlags(path):
     return ""
 
 
-print(getCFlags('/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/julietTestSuite/62640-v1.0.0/Makefile'))
+addFlagsToFiles(getBugsAssociatedWithJulietTestSuite())
+
+#print(getCFlags('/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/julietTestSuite/62640-v1.0.0/Makefile'))
 
 
 #subfolders = [f.path for f in os.scandir(folder) if f.is_dir()]
