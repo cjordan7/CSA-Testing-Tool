@@ -91,7 +91,7 @@ git clone https://github.com/torvalds/linux.git
 # TODO: Give parameter to build from source
 # Build it
 pushd
-cd llvm-project
+cd workdir/llvm-project
 mkdir build
 cd build
 cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=yes ../llvm
