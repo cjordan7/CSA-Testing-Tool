@@ -78,7 +78,7 @@ echo "${temp}" > variables.py
 # Installing z3 from source because it seems the Ubuntu package doesn't install any libraries
 git clone -b 'z3-4.12.1' --single-branch https://github.com/Z3Prover/z3.git --depth 1 workdir/z3
 
-pushd
+pushd .
 cd workdir/z3
 python3 scripts/mk_make.py
 cd build
@@ -103,7 +103,7 @@ git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-proje
 
 # TODO: Give parameter to build from source
 # Build it
-pushd
+pushd .
 cd workdir/llvm-project
 mkdir build
 cd build
