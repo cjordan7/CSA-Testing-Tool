@@ -26,6 +26,28 @@ class RunCodeChecker():
         return "CodeChecker parse --export html --output " + path +\
             " ./reports"
 
+    def runDBCommandAndRenameJSON(self, command, path, name):
+        # Make clean just in case
+        subprocess.run("make clean", shell=True, cwd=path,
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+
+        subprocess.run(command, shell=True, cwd=path)
+
+        subprocess.run("make clean", shell=True, cwd=path,
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+
+        # Rename compile_commands.json
+        subprocess.run("mv compile_commands.json compile_commands" +
+                       name + ".json", shell=True, cwd=path)
+
+    def compileDB(self, path, command, name):
+        compileDBCommand = "compiledb -n " + command
+
+        # Create compilation database for CSA
+        self.runDBCommandAndRenameJSON(compileDBCommand, path, name)
+
     def runInterceptBuild(self, path, command, name):
         #result = subprocess.run(self.codeCheckerLog + runCommand, shell=True)
 
@@ -33,13 +55,8 @@ class RunCodeChecker():
         #if("debug" in result):
         interceptBuild = InterceptBuild.getInterceptBuildCommand(command)
 
-        # Make clean just in case
-        subprocess.run("make clean", shell=True, cwd=path)
-
         # Create compilation database for CSA
-        subprocess.run(interceptBuild, shell=True, cwd=path)
-        subprocess.run("mv compilation_commands.json compilation_commands" +
-                       name + ".json", shell=True, cwd=path)
+        self.runDBCommandAndRenameJSON(interceptBuild, path, name)
 
     def runCodeChecker(self, checkers):
         enableCheckers = " ".join(["-e " + i for i in checkers].join(" "))

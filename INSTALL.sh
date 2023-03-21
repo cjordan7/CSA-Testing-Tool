@@ -3,26 +3,38 @@
 sudo apt-get update -y
 
 # Install Makefile, gcc, g++
-sudo apt-get -y install build-essential
+sudo apt-get install -y build-essential
 
 # Install cmake
 sudo apt-get -y libssl-dev
 sudo apt-get -y install cmake
 
 # Install git
-sudo apt -y install git
+sudo apt install -y git
+
+sudo apt-get install -y lld
+sudo apt-get install -y ccache
+
+# Update symlinks
+sudo /usr/sbin/update-ccache-symlinks
+
+# Prepend ccache into the PATH
+echo 'export PATH="/usr/lib/ccache:$PATH"' | tee -a ~/.bashrc
+
+# Source bashrc to test the new PATH
+source ~/.bashrc && echo $PATH
 
 
 # Install ninja
-sudo apt-get -y install ninja-build
+sudo apt-get install -y ninja-build
 
 # Install python
-sudo apt -y install python3-pip
+sudo apt install -y python3-pip
 
 # Install curl
-sudo apt -y install curl
+sudo apt install -y curl
 
-
+pip install joblib
 # File system
 # . data
 # >. linux-syzbot
@@ -95,9 +107,6 @@ git clone -b 'v1.2' --single-branch https://github.com/HexHive/magma.git --depth
 # We don't need to clone all commits as we only use the last version
 git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
 
-# Clone Linux
-# We need to clone all of Linux for `git log`
-#git clone https://github.com/torvalds/linux.git
 
 # TODO: Give parameter to build from source
 # Build it
@@ -115,13 +124,20 @@ esac
 
 
 # TODO: Detect target automatically
-cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=no -DLLVM_USE_LINKER=gold ../llvm
+cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=no -DLLVM_ENABLE_LLD=yes -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN ../llvm
+
+
+
 ninja
 
 popd
 
 git clone https://github.com/GrammaTech/cgc-cbs workdir/cgc
 
+# Clone Linux
+# We need to clone all of Linux for `git log`
+sudo apt-get install build-essential libncurses-dev bison flex libssl-dev libelf-dev
+#git clone https://github.com/torvalds/linux.git
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -130,6 +146,8 @@ git clone https://github.com/GrammaTech/cgc-cbs workdir/cgc
 # Install mandatory dependencies for a development and analysis environment.
 sudo apt-get install -y build-essential curl gcc-multilib \
       git python3-dev python3-venv
+
+pip install compiledb
 
 # Install nodejs dependency for web. In case of Debian/Ubuntu you can use the
 # following commands. For more information see the official docs:

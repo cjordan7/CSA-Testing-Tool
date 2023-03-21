@@ -5,6 +5,8 @@ from variables import Variables
 from sampleReadCSATable import getCWECheckerMapping
 from runCodeChecker import RunCodeChecker
 
+import multiprocessing
+#from multiprocessing import Pool, multiprocessing
 
 # This class represent only a bug (CWE) at a precise line of a file
 class Bug:
@@ -66,7 +68,7 @@ def getBugsAssociatedWithJulietTestSuite():
 
                 # Check for windows only compatible and ignore them as we are
                 # working on Linux and those won't work.
-                isOnlyWindows = "_w32_" in uri
+                isOnlyWindows = "_w32_" in uri or "_w32" in uri
 
                 # Start Line of bug
                 startLine = d['testCases'][i]['sarif']['runs'][0]['results'][j]['locations'][k]['physicalLocation']['region']['startLine']
@@ -86,7 +88,8 @@ def addFlagsToFiles(bugsMappedInFile):
     mappings = getCWECheckerMapping()
     baseDir = os.getcwd()
 
-    toRun = set()
+    toRun = dict()
+    toRunTotal = set()
 
     for filePath, bugs in bugsMappedInFile.items():
         filename = filePath
@@ -99,9 +102,12 @@ def addFlagsToFiles(bugsMappedInFile):
 
             # TODO: create func
             for bug in sortedBugs:
-                if(bug.cwe in mappings):
-                    if(not bug.isOnlyWindows):
-                        toRun.add(bug.idN)
+                toRunTotal.add(bug.idN)
+                if(bug.cwe in mappings and not bug.isOnlyWindows):
+                    if(bug.idN in toRun):
+                        toRun[bug.idN].append(mappings[bug.cwe])
+                    else:
+                        toRun[bug.idN] = [mappings[bug.cwe]]
 
                     f = True
                     if(len(array) == 0):
@@ -118,7 +124,7 @@ def addFlagsToFiles(bugsMappedInFile):
 
             # Create the comment:
             # // codechecker_confirmed [checkers] This is a bug."
-            if(not bug.isOnlyWindows and len(array) > 1):
+            if(len(array) > 1):
                 newPath = os.path.join(baseDir,
                                        Variables.DATA_JULIETTESTSUITE_WORKDIR)
                 newPath = os.path.join(newPath, filename)
@@ -128,75 +134,110 @@ def addFlagsToFiles(bugsMappedInFile):
                 fileToBug.close()
 
                 if("// codechecker_confirmed" not in "".join(lines)):
-                    print(len(lines))
                     for tupl in array:
                         line, checkers = tupl
                         t = ", ".join(checkers)
                         t = "// codechecker_confirmed [" + t + "] This is a bug.\n"
 
-                        print(lines[line-1])
                         if(t != lines[line-1]):
                             lines.insert(line-1, t)
 
                     tempNewFile = "".join(lines)
-                    print(tempNewFile)
-                    print(newPath)
                     fileToBug = open(newPath, "w")
                     fileToBug.write(tempNewFile)
                     fileToBug.close()
 
-                    # TODO: TEST....
-                print("".join(lines))
-
-    # TODO: Read and insert in files
-    return toRun
+    print("Finished adding Codechecker flags to each files")
+    return toRun, toRunTotal
 
 
 # We want to either omit the good code or the bad code for each test suites.
 # To do this we can use -DOMIT_GOOD or -DOMIT_BAD flags, but we need to set them out.
 # We could either change the Makefile, or we get the CFLAGS
 # and add our own -Dvar.
-def getCFlags(path):
-    f = open(path)
+def addCodeCheckerFlagToCFlags(path):
+    f = open(path, "r")
 
     lines = f.readlines()
+    f.close()
 
-    for i in lines:
-        if("CFLAGS =" in i):
-            return i
+    for i in range(0, len(lines)):
+        if("FLAGS" in lines[i] and
+           "CFLAGS" not in lines[i] and
+           "LDFLAGS" not in lines[i]):
+            print(lines[i])
 
-    return "CFLAGS ="
+    CODE_CHECKER_FLAG = "CODE_CHECKER_FLAG"
+    for i in range(0, len(lines)):
+        if("CFLAGS =" in lines[i] and
+           # Don't add the variable if it is already there
+           CODE_CHECKER_FLAG not in lines[i]):
+            lines[i] = lines[i].strip("\n") + " $(" + CODE_CHECKER_FLAG + ")\n"
+            break
+
+    f = open(path, "w")
+    f.write("".join(lines))
+    f.close()
+
+
+def workFunction(idN):
+    codeChecker = RunCodeChecker()
+    baseDir = os.getcwd()
+    pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
+
+    print("Creating compilation database for " + idN)
+    path = os.path.join(pathJTS, idN)
+    addCodeCheckerFlagToCFlags(path + "/Makefile")
+
+    makeGood = 'make build CODE_CHECKER_FLAG=-DOMIT_BAD'
+    makeBad = 'make build CODE_CHECKER_FLAG=-DOMIT_GOOD'
+
+    codeChecker.compileDB(path, makeGood, "GOOD")
+    codeChecker.compileDB(path, makeBad, "BAD")
+
+    # codeChecker.runInterceptBuild(path, makeGood, "GOOD")
+    # codeChecker.runInterceptBuild(path, makeBad, "BAD")
 
 
 def interceptBuildForJulietTestSuite(toRun):
     print("Run codechecker for juliet test suite")
-    codeChecker = RunCodeChecker()
 
-    baseDir = os.getcwd()
-    path = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
-    for idN in toRun:
-        path = os.path.join(path, idN)
-        flags = getCFlags(path + "/Makefile")
+    print(multiprocessing.cpu_count())
 
-        print(path)
+    # for idN in toRun:
+    #    workFunction(codeChecker, pathJTS, idN)
 
-        flagsGood = "make build " + flags + " -DOMIT_BAD"
-        flagsBad = "make build " + flags + " -DOMIT_GOOD"
-
-        print(flagsGood)
-
-        print(flagsBad)
-        # TODO: for each that aren't windows only makefile
-        codeChecker.runInterceptBuild(path, flagsGood, "GOOD")
-        codeChecker.runInterceptBuild(path, flagsBad, "BAD")
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    pool.map(workFunction, toRun)
+    pool.close()
 
 
 def runCodeChecker(toRun):
+    codeChecker = RunCodeChecker()
+    baseDir = os.getcwd()
+    pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
+
+    for idN in toRun:
+        #    workFunction(codeChecker, pathJTS, idN)
+        print("Creating compilation database for " + idN)
+        path = os.path.join(pathJTS, idN)
+        addCodeCheckerFlagToCFlags(path + "/Makefile")
+
+        makeGood = 'make build CODE_CHECKER_FLAG=-DOMIT_BAD'
+        makeBad = 'make build CODE_CHECKER_FLAG=-DOMIT_GOOD'
+
+        codeChecker.runCodeChecker(path, makeGood, "GOOD")
+        #codeChecker.runCodeChecker(path, makeBad, "BAD")
+
     raise NotImplementedError
 
 
-bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
-m = addFlagsToFiles(bugsMappedInFile)
-
-interceptBuildForJulietTestSuite(m)
-runCodeChecker(m)
+# TODO: Implement command line options. Don't need to always run everything in pipeline...
+if __name__ == '__main__':
+    bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
+    m, e = addFlagsToFiles(bugsMappedInFile)
+    print(m)
+    print(len(m))
+    print(len(e))
+    interceptBuildForJulietTestSuite(m.keys())
+    runCodeChecker(m)
