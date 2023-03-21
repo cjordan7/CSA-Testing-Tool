@@ -11,16 +11,22 @@ class RunCodeChecker():
     def __init__(self):
         self.codeCheckerLog = "CodeChecker log -o compile_commands.json -b "
 
-        # Use -d to disable checker class
-        self.codeCheckerCSAAnalysis = """CodeChecker analyze compile_commands.json
-        --ctu -d core -d alpha -d cplusplus -d nullability -d optin -d deadcode -d
-        security -d unix -d valist  -d security.FloatLoopCounter -d
-        security.insecureAPI.UncheckedReturn -d security.insecureAPI.getpw -d
-        security.insecureAPI.gets -d security.insecureAPI.mkstemp -d
-        security.insecureAPI.mktemp -d security.insecureAPI.rand -d
-        security.insecureAPI.vfork """
-
         self.interceptBuild = "intercept-build --override-compiler make CC=intercept-cc CXX=intercept-c++"
+
+    def codeCheckerCSAAnalysis(self, goodOrBad, outputPath):
+        # Use -d to disable checker class
+        return "CodeChecker analyze compile_commands"+\
+            goodOrBad + ".json " +\
+            "--ctu -d core -d alpha -d cplusplus -d " +\
+            "nullability -d optin -d deadcode -d " +\
+            "security -d unix -d valist  -d security.FloatLoopCounter -d " +\
+            "security.insecureAPI.UncheckedReturn " +\
+            "-d security.insecureAPI.getpw -d " +\
+            "security.insecureAPI.gets -d security.insecureAPI.mkstemp -d " +\
+            "security.insecureAPI.mktemp -d security.insecureAPI.rand -d " +\
+            "security.insecureAPI.vfork " +\
+            "--analyzer-config clangsa:unroll-loops=true " +\
+            "-o " + outputPath +  " --verbose debug "
 
     def parseOutput(self, path):
         return "CodeChecker parse --export html --output " + path +\
@@ -49,8 +55,6 @@ class RunCodeChecker():
         self.runDBCommandAndRenameJSON(compileDBCommand, path, name)
 
     def runInterceptBuild(self, path, command, name):
-        #result = subprocess.run(self.codeCheckerLog + runCommand, shell=True)
-
         # TODO: Parse result for potential errors
         #if("debug" in result):
         interceptBuild = InterceptBuild.getInterceptBuildCommand(command)
@@ -58,10 +62,12 @@ class RunCodeChecker():
         # Create compilation database for CSA
         self.runDBCommandAndRenameJSON(interceptBuild, path, name)
 
-    def runCodeChecker(self, checkers):
-        enableCheckers = " ".join(["-e " + i for i in checkers].join(" "))
+    def runCodeChecker(self, pathIn, reportPath, checkers, goodOrBad):
+        enableCheckers = " ".join(["-e " + i for i in checkers])
 
-        subprocess.run(self.codeCheckerCSAAnalysis + enableCheckers, shell=True)
+        subprocess.run(self.codeCheckerCSAAnalysis(goodOrBad, reportPath) +\
+                       enableCheckers,
+                       shell=True, cwd=pathIn)
 
     def outputInDierectory(self, directory):
         self.parseOutput(directory)

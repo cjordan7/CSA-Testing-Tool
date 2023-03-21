@@ -1,12 +1,13 @@
 import json
 import os
 
-from variables import Variables
-from sampleReadCSATable import getCWECheckerMapping
 from runCodeChecker import RunCodeChecker
+from sampleReadCSATable import getCWECheckerMapping
+from variables import Variables
 
 import multiprocessing
-#from multiprocessing import Pool, multiprocessing
+import argparse
+
 
 # This class represent only a bug (CWE) at a precise line of a file
 class Bug:
@@ -35,10 +36,6 @@ class Bug:
 
 
 def getBugsAssociatedWithJulietTestSuite():
-    # TODO: replace with workdir/julietTestSuite
-    #dirPath = os.getcwd()
-    #sarifsPath = os.getcwd()
-    #Variables.DATA_JULIETTESTSUITE_WORKDIR
     print("JulietTestSuite: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
 
     print("JulietTestSuite: Reading sarifs.json")
@@ -83,7 +80,7 @@ def getBugsAssociatedWithJulietTestSuite():
     return bugsMappedInFile
 
 
-def addFlagsToFiles(bugsMappedInFile):
+def addFlagsToFiles(bugsMappedInFile, runIt):
     print("Adding Codechecker flags to each files")
     mappings = getCWECheckerMapping()
     baseDir = os.getcwd()
@@ -105,9 +102,10 @@ def addFlagsToFiles(bugsMappedInFile):
                 toRunTotal.add(bug.idN)
                 if(bug.cwe in mappings and not bug.isOnlyWindows):
                     if(bug.idN in toRun):
-                        toRun[bug.idN].append(mappings[bug.cwe])
+                        toRun[bug.idN].add(mappings[bug.cwe])
                     else:
-                        toRun[bug.idN] = [mappings[bug.cwe]]
+                        toRun[bug.idN] = set()
+                        toRun[bug.idN].add(mappings[bug.cwe])
 
                     f = True
                     if(len(array) == 0):
@@ -124,7 +122,7 @@ def addFlagsToFiles(bugsMappedInFile):
 
             # Create the comment:
             # // codechecker_confirmed [checkers] This is a bug."
-            if(len(array) > 1):
+            if(len(array) > 1 and runIt):
                 newPath = os.path.join(baseDir,
                                        Variables.DATA_JULIETTESTSUITE_WORKDIR)
                 newPath = os.path.join(newPath, filename)
@@ -185,8 +183,10 @@ def workFunction(idN):
     baseDir = os.getcwd()
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
-    print("Creating compilation database for " + idN)
+    print("Creating compilation database (good) for " + idN)
     path = os.path.join(pathJTS, idN)
+
+    print("Creating compilation database (bad) for " + idN)
     addCodeCheckerFlagToCFlags(path + "/Makefile")
 
     makeGood = 'make build CODE_CHECKER_FLAG=-DOMIT_BAD'
@@ -202,8 +202,7 @@ def workFunction(idN):
 def interceptBuildForJulietTestSuite(toRun):
     print("Run codechecker for juliet test suite")
 
-    print(multiprocessing.cpu_count())
-
+    # TODO: Remove?
     # for idN in toRun:
     #    workFunction(codeChecker, pathJTS, idN)
 
@@ -217,27 +216,62 @@ def runCodeChecker(toRun):
     baseDir = os.getcwd()
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
-    for idN in toRun:
-        #    workFunction(codeChecker, pathJTS, idN)
-        print("Creating compilation database for " + idN)
-        path = os.path.join(pathJTS, idN)
-        addCodeCheckerFlagToCFlags(path + "/Makefile")
+    baseDir = os.getcwd()
+    reportPath = os.path.join(baseDir,
+                              Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
 
-        makeGood = 'make build CODE_CHECKER_FLAG=-DOMIT_BAD'
-        makeBad = 'make build CODE_CHECKER_FLAG=-DOMIT_GOOD'
+    for idN, checkers in toRun.items():
+        pathIn = os.path.join(pathJTS, idN)
+        pathOut = os.path.join(reportPath, idN)
 
-        codeChecker.runCodeChecker(path, makeGood, "GOOD")
-        #codeChecker.runCodeChecker(path, makeBad, "BAD")
+        print("Running codechecker analysis (good) for " + idN)
+        codeChecker.runCodeChecker(pathIn, pathOut, checkers, "GOOD")
+
+        print("Running codechecker analysis (bad) for " + idN)
+        codeChecker.runCodeChecker(pathIn, pathOut, checkers, "BAD")
 
     raise NotImplementedError
 
 
 # TODO: Implement command line options. Don't need to always run everything in pipeline...
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(prog="parseJulietTestSuite",
+                                     description="Parse and run the " +
+                                     "Clang Static Analyzer for the " +
+                                     "Juliet Test Suite: " +
+                                     "(Juliet C/C++ 1.3.1 with extra " +
+                                     "support - https://samate.nist.gov" +
+                                     "/SARD/test-suites/116)",
+                                     epilog="Text at the bottom of help")
+    parser.add_argument("-o", action="store_true",
+                        help="write to file the checkers")
+    parser.add_argument("-i", action="store_true",
+                        help="run interceptBuild")
+    parser.add_argument("-r", action="store_true",
+                        help="run codechecker analysis (CSA analysis)")
+    parser.add_argument("-html", action="store_true",
+                        help="convert generated reports to html")
+
+    args = parser.parse_args()
+
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
-    m, e = addFlagsToFiles(bugsMappedInFile)
-    print(m)
-    print(len(m))
-    print(len(e))
-    interceptBuildForJulietTestSuite(m.keys())
-    runCodeChecker(m)
+
+    print(args.i)
+    print(args.r)
+    print(args.hml)
+
+    if(not args.i and not args.r and not args.html):
+        m, e = addFlagsToFiles(bugsMappedInFile, args.i)
+        interceptBuildForJulietTestSuite(m.keys())
+        runCodeChecker(m)
+        exit(0)
+
+    m, e = addFlagsToFiles(bugsMappedInFile, args.i)
+    if(args.i):
+        interceptBuildForJulietTestSuite(m.keys())
+
+    if(args.r):
+        runCodeChecker(m)
+
+    if(args.html):
+        print("...")

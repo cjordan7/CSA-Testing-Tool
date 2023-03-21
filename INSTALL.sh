@@ -34,7 +34,8 @@ sudo apt install -y python3-pip
 # Install curl
 sudo apt install -y curl
 
-pip install joblib
+pip install argparse
+
 # File system
 # . data
 # >. linux-syzbot
