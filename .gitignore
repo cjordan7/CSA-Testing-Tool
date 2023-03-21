@@ -4,5 +4,6 @@ __pycache__/
 data/
 workdir/cgc
 workdir/llvm-project
+#reports
 tests.sh
 *.zip
