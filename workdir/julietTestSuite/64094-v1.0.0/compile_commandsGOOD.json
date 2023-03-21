@@ -1,0 +1,32 @@
+[
+ {
+  "directory": "/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/64094-v1.0.0",
+  "arguments": [
+   "gcc",
+   "-I",
+   "src/testcasesupport",
+   "-DINCLUDEMAIN",
+   "-DOMIT_BAD",
+   "-c",
+   "src/testcasesupport/io.c",
+   "-o",
+   "build/testcasesupport/io.o"
+  ],
+  "file": "src/testcasesupport/io.c"
+ },
+ {
+  "directory": "/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/64094-v1.0.0",
+  "arguments": [
+   "gcc",
+   "-I",
+   "src/testcasesupport",
+   "-DINCLUDEMAIN",
+   "-DOMIT_BAD",
+   "-c",
+   "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s03/CWE121_Stack_Based_Buffer_Overflow__CWE805_char_declare_loop_41.c",
+   "-o",
+   "build/testcases/CWE121_Stack_Based_Buffer_Overflow/s03/CWE121_Stack_Based_Buffer_Overflow__CWE805_char_declare_loop_41.o"
+  ],
+  "file": "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s03/CWE121_Stack_Based_Buffer_Overflow__CWE805_char_declare_loop_41.c"
+ }
+]

@@ -1,0 +1,156 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "properties": {
+        "id": 64630,
+        "version": "1.0.0",
+        "type": "source code",
+        "status": "accepted",
+        "submissionDate": "2013-05-20",
+        "language": "cplusplus",
+        "author": "NSA/Center for Assured Software",
+        "description": "CWE: 121 Stack Based Buffer Overflow\n BadSource:  Set data pointer to the bad buffer\n GoodSource: Set data pointer to the good buffer\n Sinks: memcpy\n BadSink : Copy int array to data using memcpy\n Flow Variant: 81 Data flow: data passed in a parameter to an virtual method called via a reference",
+        "state": "mixed"
+      },
+      "tool": {
+        "driver": {
+          "name": "SARD - SAMATE",
+          "fullName": "Software Assurance Reference Dataset Project",
+          "informationUri": "https://samate.nist.gov/SARD/",
+          "version": "5.0.0",
+          "organization": "NIST",
+          "supportedTaxonomies": [
+            {
+              "name": "CWE",
+              "index": 0
+            }
+          ]
+        }
+      },
+      "artifacts": [
+        {
+          "location": {
+            "uri": "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s04/CWE121_Stack_Based_Buffer_Overflow__CWE805_int_alloca_memcpy_81.h"
+          },
+          "length": 1379,
+          "sourceLanguage": "c",
+          "hashes": {
+            "sha-256": "d620ffa70584a5b3a60dbcd1c7c14bb1abb3ea3cdc671aa2f2e43556af39699d"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s04/CWE121_Stack_Based_Buffer_Overflow__CWE805_int_alloca_memcpy_81_bad.cpp"
+          },
+          "length": 1151,
+          "sourceLanguage": "cplusplus",
+          "hashes": {
+            "sha-256": "c21e6054e03b891c0c842689428043f61e681ca7f6c3a55d5489e90cb51410b3"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s04/CWE121_Stack_Based_Buffer_Overflow__CWE805_int_alloca_memcpy_81_goodG2B.cpp"
+          },
+          "length": 1165,
+          "sourceLanguage": "cplusplus",
+          "hashes": {
+            "sha-256": "2b1018cce6d521beedb97810fcb9f74b77cdc99696f681db42002242a8c3e5c9"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s04/CWE121_Stack_Based_Buffer_Overflow__CWE805_int_alloca_memcpy_81a.cpp"
+          },
+          "length": 2862,
+          "sourceLanguage": "cplusplus",
+          "hashes": {
+            "sha-256": "f0fe299b855c6c259f4c2c0e849f35bb0d56ba0033f536e3ed635a248affcfdf"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/testcasesupport/io.c"
+          },
+          "length": 5429,
+          "sourceLanguage": "c",
+          "hashes": {
+            "sha-256": "50ace91d0f9cd9f281d5d8ff3a9ca879ee2779d737030ae84e8e4be3df5b299c"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/testcasesupport/std_testcase.h"
+          },
+          "length": 4004,
+          "sourceLanguage": "c",
+          "hashes": {
+            "sha-256": "a78aaf3a54a6210260ad70123c09c3c283c6edf7808b6244205e00b8f2d9b8d0"
+          }
+        },
+        {
+          "location": {
+            "uri": "src/testcasesupport/std_testcase_io.h"
+          },
+          "length": 1457,
+          "sourceLanguage": "c",
+          "hashes": {
+            "sha-256": "6459df50d22697bb61619e2effd688ebb98915db25f7eb1bdbb767f888066fb6"
+          }
+        }
+      ],
+      "taxonomies": [
+        {
+          "name": "CWE",
+          "version": "4.6",
+          "informationUri": "https://cwe.mitre.org/data/published/cwe_v4.6.pdf",
+          "downloadUri": "https://cwe.mitre.org/data/xml/cwec_v4.6.xml.zip",
+          "organization": "MITRE",
+          "shortDescription": {
+            "text": "The MITRE Common Weakness Enumeration"
+          },
+          "isComprehensive": false,
+          "taxa": [
+            {
+              "id": "121",
+              "name": "Stack-based Buffer Overflow"
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "CWE-121",
+          "message": {
+            "text": "Stack-based Buffer Overflow."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/testcases/CWE121_Stack_Based_Buffer_Overflow/s04/CWE121_Stack_Based_Buffer_Overflow__CWE805_int_alloca_memcpy_81_bad.cpp",
+                  "index": 1
+                },
+                "region": {
+                  "startLine": 29
+                }
+              }
+            }
+          ],
+          "taxa": [
+            {
+              "toolComponent": {
+                "name": "CWE",
+                "index": 0
+              },
+              "id": "121",
+              "index": 0
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
