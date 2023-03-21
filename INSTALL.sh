@@ -75,7 +75,8 @@ echo "${temp}" > variables.py
 
 
 
-# Installing z3 from source because it seems the Ubuntu package doesn't install any libraries
+# Installing z3 from source because it seems the Ubuntu package doesn't install any
+# libraries which are need for LLVM
 git clone -b 'z3-4.12.1' --single-branch https://github.com/Z3Prover/z3.git --depth 1 workdir/z3
 
 pushd .
@@ -85,9 +86,6 @@ cd build
 make -j$(nproc)
 sudo make install
 popd
-
-
-# TODO: Create a sub file for each of clone project??
 
 # Clone Magma
 git clone -b 'v1.2' --single-branch https://github.com/HexHive/magma.git --depth 1 workdir/magma
@@ -108,10 +106,16 @@ cd workdir/llvm-project
 mkdir build
 cd build
 
+# TODO: Test code
+architecture=""
+case $(uname -m) in
+    x86_64) architecture="X86" ;;
+    arm) architecture="ARM" ;;
+esac
+
 
 # TODO: Detect target automatically
-cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=yes ../llvm
-
+cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=no -DLLVM_USE_LINKER=gold ../llvm
 ninja
 
 popd
@@ -124,9 +128,7 @@ git clone https://github.com/GrammaTech/cgc-cbs workdir/cgc
 # ------------------------------------------------------------------------------
 # Git clone CodeChecker
 # Install mandatory dependencies for a development and analysis environment.
-# NOTE: clang or clang-tidy can be any sufficiently fresh version, and need not
-#       come from package manager!
-sudo apt-get install -y clang clang-tidy build-essential curl gcc-multilib \
+sudo apt-get install -y build-essential curl gcc-multilib \
       git python3-dev python3-venv
 
 # Install nodejs dependency for web. In case of Debian/Ubuntu you can use the
@@ -147,10 +149,6 @@ cd workdir/codechecker
 # of `venv`.
 make venv
 source $PWD/venv/bin/activate
-
-# [Optional] If you want to use external authentication methods (LDAP / PAM)
-# follow the instructions in
-# docs/web/authentication.md#external-authentication-methods
 
 # Build and install a CodeChecker package.
 make package

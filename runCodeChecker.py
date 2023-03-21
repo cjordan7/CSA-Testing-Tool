@@ -23,9 +23,10 @@ class RunCodeChecker():
         self.interceptBuild = "intercept-build --override-compiler make CC=intercept-cc CXX=intercept-c++"
 
     def parseOutput(self, path):
-        return "CodeChecker parse --export html --output " + path + " ./reports"
+        return "CodeChecker parse --export html --output " + path +\
+            " ./reports"
 
-    def runInterceptBuild(self, path, command):
+    def runInterceptBuild(self, path, command, name):
         #result = subprocess.run(self.codeCheckerLog + runCommand, shell=True)
 
         # TODO: Parse result for potential errors
@@ -37,8 +38,8 @@ class RunCodeChecker():
 
         # Create compilation database for CSA
         subprocess.run(interceptBuild, shell=True, cwd=path)
-
-        print(result)
+        subprocess.run("mv compilation_commands.json compilation_commands" +
+                       name + ".json", shell=True, cwd=path)
 
     def runCodeChecker(self, checkers):
         enableCheckers = " ".join(["-e " + i for i in checkers].join(" "))

@@ -3,7 +3,6 @@ import os
 
 from variables import Variables
 from sampleReadCSATable import getCWECheckerMapping
-
 from runCodeChecker import RunCodeChecker
 
 
@@ -41,11 +40,14 @@ def getBugsAssociatedWithJulietTestSuite():
     print("JulietTestSuite: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
 
     print("JulietTestSuite: Reading sarifs.json")
-    f = open('/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/julietTestSuite/sarifs.json')
+    baseDir = os.getcwd()
+    newPath = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
+    newPath = os.path.join(newPath, "sarifs.json")
+
+    f = open(newPath)
     d = json.load(f)
 
     bugsMappedInFile = dict()
-
 
     for i in range(0, len(d['testCases'])):
         for j in range(0, len(d['testCases'][i]['sarif']['runs'][0]['results'])):
@@ -82,26 +84,25 @@ def getBugsAssociatedWithJulietTestSuite():
 def addFlagsToFiles(bugsMappedInFile):
     print("Adding Codechecker flags to each files")
     mappings = getCWECheckerMapping()
-    base_dir = os.getcwd()
-    print(base_dir)
+    baseDir = os.getcwd()
+
+    toRun = set()
+
     for filePath, bugs in bugsMappedInFile.items():
         filename = filePath
-
-        # TODO: Replace that path with variable
-        newPath = os.path.join(base_dir, "workdir/julietTestSuite/julietTestSuite")
-        newPath = os.path.join(newPath, filename)
-        f = open(newPath)
-        #lines = f.readlines()
         sortedBugs = sorted(bugs, reverse=True)
 
         if(len(bugs) > 1):
-            lines = f.readlines()
             array = []
             i = 0
             f = False
+
             # TODO: create func
             for bug in sortedBugs:
                 if(bug.cwe in mappings):
+                    if(not bug.isOnlyWindows):
+                        toRun.add(bug.idN)
+
                     f = True
                     if(len(array) == 0):
                         checkerSet = {mappings[bug.cwe]}
@@ -117,18 +118,44 @@ def addFlagsToFiles(bugsMappedInFile):
 
             # Create the comment:
             # // codechecker_confirmed [checkers] This is a bug."
-            for tupl in array:
-                line, checkers = tupl
-                t = ", ".join(checkers)
-                t = "// codechecker_confirmed [" + t + "] This is a bug."
+            if(not bug.isOnlyWindows and len(array) > 1):
+                newPath = os.path.join(baseDir,
+                                       Variables.DATA_JULIETTESTSUITE_WORKDIR)
+                newPath = os.path.join(newPath, filename)
 
+                fileToBug = open(newPath)
+                lines = fileToBug.readlines()
+                fileToBug.close()
 
-            # TODO: Read and insert in files
+                if("// codechecker_confirmed" not in "".join(lines)):
+                    print(len(lines))
+                    for tupl in array:
+                        line, checkers = tupl
+                        t = ", ".join(checkers)
+                        t = "// codechecker_confirmed [" + t + "] This is a bug.\n"
+
+                        print(lines[line-1])
+                        if(t != lines[line-1]):
+                            lines.insert(line-1, t)
+
+                    tempNewFile = "".join(lines)
+                    print(tempNewFile)
+                    print(newPath)
+                    fileToBug = open(newPath, "w")
+                    fileToBug.write(tempNewFile)
+                    fileToBug.close()
+
+                    # TODO: TEST....
+                print("".join(lines))
+
+    # TODO: Read and insert in files
+    return toRun
 
 
 # We want to either omit the good code or the bad code for each test suites.
 # To do this we can use -DOMIT_GOOD or -DOMIT_BAD flags, but we need to set them out.
-# We could either change the Makefile, or we get the CFLAGS and add our own -Dvar.
+# We could either change the Makefile, or we get the CFLAGS
+# and add our own -Dvar.
 def getCFlags(path):
     f = open(path)
 
@@ -141,24 +168,35 @@ def getCFlags(path):
     return "CFLAGS ="
 
 
-def runCodeChecker(bugsMappedInFile):
+def interceptBuildForJulietTestSuite(toRun):
     print("Run codechecker for juliet test suite")
     codeChecker = RunCodeChecker()
 
-    # TODO: for each that aren't windows only makefile
-    codeChecker.runInterceptBuild("/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/data/julietTestSuite/64340-v1.0.0", "make build")
+    baseDir = os.getcwd()
+    path = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
+    for idN in toRun:
+        path = os.path.join(path, idN)
+        flags = getCFlags(path + "/Makefile")
+
+        print(path)
+
+        flagsGood = "make build " + flags + " -DOMIT_BAD"
+        flagsBad = "make build " + flags + " -DOMIT_GOOD"
+
+        print(flagsGood)
+
+        print(flagsBad)
+        # TODO: for each that aren't windows only makefile
+        codeChecker.runInterceptBuild(path, flagsGood, "GOOD")
+        codeChecker.runInterceptBuild(path, flagsBad, "BAD")
 
 
-m = getBugsAssociatedWithJulietTestSuite()
+def runCodeChecker(toRun):
+    raise NotImplementedError
 
-#addFlagsToFiles)
 
+bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
+m = addFlagsToFiles(bugsMappedInFile)
+
+interceptBuildForJulietTestSuite(m)
 runCodeChecker(m)
-
-#print(getCFlags('/Users/cosmejordan/Desktop/MasterProject/CSA-Testing-Tool/workdir/julietTestSuite/julietTestSuite/62640-v1.0.0/Makefile'))
-
-
-#subfolders = [f.path for f in os.scandir(folder) if f.is_dir()]
-
-
-# TODO: Change name of file
