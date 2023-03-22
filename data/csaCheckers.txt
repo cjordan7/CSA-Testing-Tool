@@ -1,0 +1,131 @@
+CWE-688, CWE-628, CWE-457:core.CallAndMessage
+CWE-369: core.DivideZero
+CWE-233: core.NonNullParamChecker
+CWE-476, CWE-690: core.NullDereference
+CWE-562: core.StackAddressEscape
+core.UndefinedBinaryOperatorResult
+core.VLASize
+CWE-129: core.uninitialized.ArraySubscript
+CWE-908: core.uninitialized.Assign
+CWE-665: core.uninitialized.Branch
+core.uninitialized.CapturedBlockVariable
+CWE-908: core.uninitialized.UndefReturn
+core.uninitialized.NewArraySize
+cplusplus
+cplusplus.InnerPointer
+CWE-416, CWE-415: cplusplus.NewDelete
+CWE-401: cplusplus.NewDeleteLeaks
+cplusplus.PlacementNewChecker
+cplusplus.SelfAssignment
+cplusplus.StringChecker
+CWE-1076: deadcode.DeadStores
+optin
+optin.cplusplus.UninitializedObject
+optin.cplusplus.VirtualCall
+optin.mpi.MPI-Checker
+optin.performance.GCDAntipattern
+optin.performance.Padding
+optin.portability.UnixAPI
+CWE-1077: security.FloatLoopCounter
+CWE-477, CWE-252: security.insecureAPI.UncheckedReturn
+CWE-477, CWE-676: security.insecureAPI.bcmp
+CWE-477, CWE-676: security.insecureAPI.bcopy
+CWE-477, CWE-676: security.insecureAPI.bzero
+CWE-477, CWE-676: security.insecureAPI.getpw
+CWE-676, CWE-242: security.insecureAPI.gets
+CWE-676: security.insecureAPI.mkstemp
+CWE-377, CWE-676: security.insecureAPI.mktemp
+CWE-338, CWE-676: security.insecureAPI.rand
+CWE-119, CWE-676: security.insecureAPI.strcpy
+CWE-477, CWE-676: security.insecureAPI.vfork
+security.insecureAPI.DeprecatedOrUnsafeBufferHandling (C)
+CWE-131, CWE-242: unix.API
+CWE-672, CWE-244, CWE-416, CWE-401, CWE-590, CWE-761, CWE-770, CWE-415: unix.Malloc
+unix.MallocSizeof
+unix.MismatchedDeallocator
+unix.Vfork
+CWE-119, CWE-190: unix.cstring.BadSizeArg
+unix.cstring.NullArg
+Fuchsia
+fuchsia.HandleChecker
+WebKit
+webkit.RefCntblBaseVirtualDtor
+webkit.NoUncountedMemberChecker
+webkit.UncountedLambdaCapturesChecker
+Experimental Checkers
+alpha.clone
+alpha.clone.CloneChecker
+alpha.core
+alpha.core.BoolAssignment
+CWE-667: alpha.core.C11Lock
+CWE-457:alpha.core.CallAndMessageUnInitRefArg
+alpha.core.CastSize
+CWE-588: alpha.core.CastToStruct
+CWE-843, CWE-681, CWE-194, CWE-196, CWE-195: alpha.core.Conversion
+CWE-843: alpha.core.DynamicTypeChecker
+CWE-587:alpha.core.FixedAddr
+alpha.core.IdenticalExpr
+alpha.core.PointerArithm
+CWE-469: alpha.core.PointerSub
+CWE-467: alpha.core.SizeofPtr
+alpha.core.StackAddressAsyncEscape
+alpha.core.TestAfterDivZero
+alpha.cplusplus
+alpha.cplusplus.DeleteWithNonVirtualDtor
+alpha.cplusplus.EnumCastOutOfRange
+alpha.cplusplus.InvalidatedIterator
+alpha.cplusplus.IteratorRange
+alpha.cplusplus.MismatchedIterator
+alpha.cplusplus.MisusedMovedObject
+alpha.cplusplus.SmartPtr
+CWE-561: alpha.deadcode
+alpha.deadcode.UnreachableCode
+alpha.fuchsia
+alpha.fuchsia.Lock
+alpha.llvm
+alpha.llvm.Conventions
+alpha.security
+CWE-190, CWE-126, CWE-121, CWE-124, CWE-680, CWE-127:alpha.security.ArrayBoundV2
+CWE-190, CWE-122: alpha.security.MallocOverflow
+alpha.security.MmapWriteExec
+CWE-466:alpha.security.ReturnPtrRange
+alpha.security.cert
+alpha.security.cert.pos
+alpha.security.cert.pos.34c
+alpha.security.cert.env
+alpha.security.cert.env.InvalidPtr
+CWE-78, CWE-606, CWE-134, CWE-377, CWE-114, CWE-789: alpha.security.taint
+CWE-78, CWE-606, CWE-134, CWE-377, CWE-114, CWE-789:alpha.security.taint.TaintPropagation
+alpha.unix
+alpha.unix.StdCLibraryFunctionArgs
+alpha.unix.BlockInCriticalSection
+alpha.unix.Chroot
+alpha.unix.Errno
+CWE-667: alpha.unix.PthreadLock
+alpha.unix.SimpleStream
+alpha.unix.Stream
+alpha.unix.cstring.BufferOverlap
+alpha.unix.cstring.NotNullTerminated
+alpha.unix.cstring.OutOfBounds
+alpha.unix.cstring.UninitializedRead
+alpha.nondeterminism.PointerIteration
+alpha.nondeterminism.PointerSorting (C++)
+alpha.WebKit
+alpha.webkit.UncountedCallArgsChecker
+alpha.webkit.UncountedLocalVarsChecker
+Debug Checkers
+debug
+debug.AnalysisOrder
+debug.ConfigDumper
+debug.DumpCFG Display
+debug.DumpCallGraph
+debug.DumpCalls
+debug.DumpDominators
+debug.DumpLiveVars
+debug.DumpTraversal
+debug.ExprInspection
+debug.Stats
+debug.TaintTest
+debug.ViewCFG
+debug.ViewCallGraph
+debug.ViewExplodedGraph

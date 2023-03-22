@@ -123,8 +123,6 @@ case $(uname -m) in
     arm) architecture="ARM" ;;
 esac
 
-
-# TODO: Detect target automatically
 cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=yes -DLLVM_USE_LINKER=gold -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN ../llvm
 
 
@@ -135,6 +133,7 @@ popd
 
 git clone https://github.com/GrammaTech/cgc-cbs workdir/cgc
 
+pushd .
 # Clone Linux
 # We need to clone all of Linux for `git log`
 sudo apt-get install build-essential libncurses-dev bison flex libssl-dev libelf-dev
@@ -156,9 +155,6 @@ pip install compiledb
 curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-
-# TODO: Get a special tags
-
 # Check out CodeChecker source code.
 git clone --branch 'v6.21.0' --single-branch https://github.com/Ericsson/CodeChecker.git --depth 1 workdir/codechecker
 cd workdir/codechecker
@@ -177,3 +173,4 @@ export PATH="$PWD/build/CodeChecker/bin:$PATH"
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+ popd

@@ -1,7 +1,6 @@
 .DS_Store
 
 __pycache__/
-data/
 workdir/cgc
 workdir/llvm-project
 #reports
