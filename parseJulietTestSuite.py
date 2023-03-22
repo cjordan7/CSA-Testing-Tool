@@ -234,7 +234,7 @@ def runCodeChecker(toRun):
         print("Running codechecker analysis (bad) for " + idN)
         codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
 
-    raise NotImplementedError
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
