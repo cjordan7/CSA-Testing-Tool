@@ -171,6 +171,11 @@ source $PWD/venv/bin/activate
 make package
 
 # For ease of access, add the build directory to PATH.
+
+echo "export PATH=\"`python3 -m site --user-base`/bin:\$PATH\"" >> ~/.bashrc
+
+echo "export PATH=\"$PWD/build/CodeChecker/bin:\$PATH\""
+
 export PATH="$PWD/build/CodeChecker/bin:$PATH" >> ~/.bashrc
 source ~/.bashrc
 
