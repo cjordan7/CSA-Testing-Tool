@@ -225,12 +225,14 @@ def runCodeChecker(toRun):
     for idN, checkers in toRun.items():
         pathIn = os.path.join(pathJTS, idN)
         pathOut = os.path.join(reportPath, idN)
+        pathOutGood = os.path.join(pathOut, "GOOD")
 
         print("Running codechecker analysis (good) for " + idN)
-        codeChecker.runCodeChecker(pathIn, pathOut, checkers, "GOOD")
+        codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
 
+        pathOutBad = os.path.join(pathOut, "BAD")
         print("Running codechecker analysis (bad) for " + idN)
-        codeChecker.runCodeChecker(pathIn, pathOut, checkers, "BAD")
+        codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
 
     raise NotImplementedError
 

@@ -15,7 +15,7 @@ class RunCodeChecker():
 
     def codeCheckerCSAAnalysis(self, goodOrBad, outputPath):
         # Use -d to disable checker class
-        return "CodeChecker analyze compile_commands"+\
+        return "CodeChecker analyze compile_commands"+ \
             goodOrBad + ".json " +\
             "--ctu -d core -d alpha -d cplusplus -d " +\
             "nullability -d optin -d deadcode -d " +\
@@ -26,7 +26,7 @@ class RunCodeChecker():
             "security.insecureAPI.mktemp -d security.insecureAPI.rand -d " +\
             "security.insecureAPI.vfork " +\
             "--analyzer-config clangsa:unroll-loops=true " +\
-            "-o " + outputPath +  " --verbose debug "
+            "-o " + outputPath + " --verbose debug "
 
     def parseOutput(self, path):
         return "CodeChecker parse --export html --output " + path +\
@@ -56,7 +56,6 @@ class RunCodeChecker():
 
     def runInterceptBuild(self, path, command, name):
         # TODO: Parse result for potential errors
-        #if("debug" in result):
         interceptBuild = InterceptBuild.getInterceptBuildCommand(command)
 
         # Create compilation database for CSA
@@ -65,7 +64,7 @@ class RunCodeChecker():
     def runCodeChecker(self, pathIn, reportPath, checkers, goodOrBad):
         enableCheckers = " ".join(["-e " + i for i in checkers])
 
-        subprocess.run(self.codeCheckerCSAAnalysis(goodOrBad, reportPath) +\
+        subprocess.run(self.codeCheckerCSAAnalysis(goodOrBad, reportPath) +
                        enableCheckers,
                        shell=True, cwd=pathIn)
 
