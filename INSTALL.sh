@@ -148,6 +148,8 @@ sudo apt-get install -y build-essential curl gcc-multilib \
       git python3-dev python3-venv
 
 pip install compiledb
+echo "export PATH=\"`python3 -m site --user-base`/bin:\$PATH\"" >> ~/.bashrc
+source ~/.bashrc
 
 # Install nodejs dependency for web. In case of Debian/Ubuntu you can use the
 # following commands. For more information see the official docs:
@@ -169,7 +171,10 @@ source $PWD/venv/bin/activate
 make package
 
 # For ease of access, add the build directory to PATH.
-export PATH="$PWD/build/CodeChecker/bin:$PATH"
+export PATH="$PWD/build/CodeChecker/bin:$PATH" >> ~/.bashrc
+source ~/.bashrc
+
+
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------

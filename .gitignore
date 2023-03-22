@@ -1,8 +1,7 @@
 .DS_Store
 
 __pycache__/
-workdir/cgc
-workdir/llvm-project
+workdir/
 #reports
 tests.sh
 *.zip
