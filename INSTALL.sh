@@ -131,12 +131,17 @@ ninja
 
 popd
 
+
+sudo pip install pycrypto pyyaml matplotlib defusedxml
+sudo apt-get install -y pandoc
+
 pushd .
 git clone https://github.com/GrammaTech/cgc-cbs --depth 1 workdir/cgc
 cd workdir/cgc
 git checkout 797bd722ea544ab8205446dde13dcfdc059c0989
 
 popd .
+
 
 pushd .
 # Clone Linux

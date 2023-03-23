@@ -41,7 +41,7 @@ def getBugsAssociatedWithJulietTestSuite():
     print("JulietTestSuite: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
 
     print("JulietTestSuite: Reading sarifs.json")
-    baseDir = os.getcwd()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
     newPath = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
     newPath = os.path.join(newPath, "sarifs.json")
 
@@ -85,7 +85,7 @@ def getBugsAssociatedWithJulietTestSuite():
 def addFlagsToFiles(bugsMappedInFile, runIt):
     print("Adding Codechecker flags to each files")
     mappings = getCWECheckerMapping()
-    baseDir = os.getcwd()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
 
     toRun = dict()
     toRunTotal = set()
@@ -182,7 +182,7 @@ def addCodeCheckerFlagToCFlags(path):
 
 def workFunction(idN):
     codeChecker = RunCodeChecker()
-    baseDir = os.getcwd()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
     print("Creating compilation database (good) for " + idN)
@@ -215,10 +215,10 @@ def interceptBuildForJulietTestSuite(toRun):
 
 def runCodeChecker(toRun):
     codeChecker = RunCodeChecker()
-    baseDir = os.getcwd()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
-    baseDir = os.getcwd()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
     reportPath = os.path.join(baseDir,
                               Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
 
