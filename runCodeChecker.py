@@ -55,7 +55,6 @@ class RunCodeChecker():
         self.runDBCommandAndRenameJSON(compileDBCommand, path, name)
 
     def runInterceptBuild(self, path, command, name):
-        # TODO: Parse result for potential errors
         interceptBuild = InterceptBuild.getInterceptBuildCommand(command)
 
         # Create compilation database for CSA
