@@ -132,7 +132,7 @@ ninja
 popd
 
 pushd .
-git clone https://github.com/GrammaTech/cgc-cbs workdir/cgc
+git clone https://github.com/GrammaTech/cgc-cbs --depth 1 workdir/cgc
 cd workdir/cgc
 git checkout 797bd722ea544ab8205446dde13dcfdc059c0989
 
