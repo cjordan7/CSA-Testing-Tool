@@ -93,8 +93,7 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
     for filePath, bugs in bugsMappedInFile.items():
         filename = filePath
         sortedBugs = sorted(bugs, reverse=True)
-
-        if(len(bugs) > 1):
+        if(len(bugs) >= 1):
             array = []
             i = 0
             f = False
@@ -124,11 +123,10 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
 
             # Create the comment:
             # // codechecker_confirmed [checkers] This is a bug."
-            if(len(array) > 1 and runIt):
+            if(len(array) >= 1 and runIt):
                 newPath = os.path.join(baseDir,
                                        Variables.DATA_JULIETTESTSUITE_WORKDIR)
                 newPath = os.path.join(newPath, filename)
-
                 fileToBug = open(newPath)
                 lines = fileToBug.readlines()
                 fileToBug.close()
@@ -265,15 +263,12 @@ if __name__ == '__main__':
                         "for each tests. " +
                         "-i has to have been called prior for " +
                         "this to work individually")
-    parser.add_argument("-html", action="store_true",
-                        help="convert generated reports to html" +
-                        "readable reports")
 
     args = parser.parse_args()
 
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
 
-    if(not args.o and not args.i and not args.r and not args.html):
+    if(not args.o and not args.i and not args.r):
         m, e = addFlagsToFiles(bugsMappedInFile, True)
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
@@ -286,6 +281,3 @@ if __name__ == '__main__':
 
     if(args.r):
         runCodeChecker(m)
-
-    if(args.html):
-        raise NotImplementedError
