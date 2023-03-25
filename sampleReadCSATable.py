@@ -1,11 +1,12 @@
 import os
+from variables import Variables
 
 
 def getCWECheckerMapping():
     print("Getting CWE - checkers mappings")
     csaTableMapped = dict()
     baseDir = os.path.dirname(os.path.realpath(__file__))
-    pathCSACheckers = os.path.join(baseDir, "data/csaCheckers.txt")
+    pathCSACheckers = os.path.join(baseDir, Variables.CSA_CHECKERS_PATH)
     csaTable = open(pathCSACheckers, "r")
     csaTableLines = csaTable.readlines()
 

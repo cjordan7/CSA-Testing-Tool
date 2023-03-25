@@ -13,6 +13,16 @@ class RunCodeChecker():
 
         self.interceptBuild = "intercept-build --override-compiler make CC=intercept-cc CXX=intercept-c++"
 
+    # TODO: Try it with one, or a few test cases
+    # TODO: Buggy plist
+
+#TODO: codechecker found line (FP) ? buggy line ?
+#TODO: statistics (FP, TP,..., rates)
+#lineA
+#lineB
+#lineC: JTS: BUGGY:
+#lineD: Codechecker: BUGGY
+
     def codeCheckerCSAAnalysis(self, goodOrBad, outputPath):
         # Use -d to disable checker class
         return "CodeChecker analyze compile_commands"+ \

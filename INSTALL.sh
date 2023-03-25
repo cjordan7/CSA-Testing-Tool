@@ -1,5 +1,4 @@
-
-
+#!/bin/bash
 sudo apt-get update -y
 
 # Install Makefile, gcc, g++
@@ -56,18 +55,15 @@ pip install argparse
 
 # Special variables
 
-
 # Change all of this to make it more extensible
-declare -a arr=("linux-syzbot" "llvm-project" "codechecker" "julietTestSuite" "cgc" "magma" "linux" "z3")
+declare -a arr=("linux-syzbot" "llvm-project" "julietTestSuite" "cgc" "magma" "linux")
 
 temp="class Variables():"
 for i in "${arr[@]}"
 do
-    echo ${i}
     # Create directories
     workDir=workdir/"$i"
     reportsDir=reports/"$i"
-    echo ${workDir}
     mkdir -p ${workDir}
     mkdir -p ${reportsDir}
 
@@ -78,15 +74,18 @@ do
     up=$(echo ${replaced} | tr '[:lower:]' '[:upper:]')
 
     # Add it to the class Variables
-    temp="${temp}"$'\n\t'"DATA_${up}_WORKDIR = \"${workDir}\""
-    temp="${temp}"$'\n\t'"DATA_${up}_REPORT_DIR = \"${reportsDir}\""
-    echo "$temp"
-    # or do whatever with individual element of the array
+    temp="${temp}"$'\n    '"DATA_${up}_WORKDIR = \"${workDir}\""
+    temp="${temp}"$'\n    '"DATA_${up}_REPORT_DIR = \"${reportsDir}\""
 done
 
+temp="${temp}"$'\n    '"DATA_Z3_WORKDIR = \"workdir/z3\""
+temp="${temp}"$'\n    '"DATA_CODECHECKER_WORKDIR = \"workdir/codechecker\""
+temp="${temp}"$'\n    '"DATA_FOLDER = \"data\""
+temp="${temp}"$'\n    '"CGC_PATCH_PATH = \"data/cgc_patch.patch\""
+temp="${temp}"$'\n    '"CSA_CHECKERS_PATH = \"data/csaCheckers.txt\""
+temp="${temp}"$'\n    '"CGC_BUILD = \"data/cgcBuild.sh\""
+
 echo "${temp}" > variables.py
-
-
 
 # Installing z3 from source because it seems the Ubuntu package doesn't install any
 # libraries which are need for LLVM
@@ -103,33 +102,35 @@ popd
 # Clone Magma
 git clone -b 'v1.2' --single-branch https://github.com/HexHive/magma.git --depth 1 workdir/magma
 
-
-# Clone LLVM. We only clone the tags we are interested in.
-# We don't need to clone all commits as we only use the last version
-git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
-
-
-# TODO: Give parameter to build from source
-# Build it
-pushd .
-cd workdir/llvm-project
-mkdir build
-cd build
-
-# TODO: Test code
-architecture=""
-case $(uname -m) in
-    x86_64) architecture="X86" ;;
-    arm) architecture="ARM" ;;
-esac
-
-cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=yes -DLLVM_USE_LINKER=gold -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN ../llvm
+debug=$1
+if [ "$debug" = "debug" ]; then
+  # Clone LLVM. We only clone the tags we are interested in.
+  # We don't need to clone all commits as we only use the last version
+  git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
 
 
+  # TODO: Give parameter to build from source
+  # Build it
+  pushd .
+  cd workdir/llvm-project
+  mkdir build
+  cd build
 
-ninja
+  # TODO: Test code
+  architecture=""
+  case $(uname -m) in
+      x86_64) architecture="X86" ;;
+      arm) architecture="ARM" ;;
+  esac
 
-popd
+  cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=no -DLLVM_USE_LINKER=gold -DLLVM_PARALLEL_LINK_JOBS=1 ../llvm
+
+  ninja
+
+  popd
+else
+  sudo apt-get install -y clang-15
+fi
 
 
 sudo pip install pycrypto pyyaml matplotlib defusedxml

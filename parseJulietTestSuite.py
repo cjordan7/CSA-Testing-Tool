@@ -47,6 +47,7 @@ def getBugsAssociatedWithJulietTestSuite():
 
     f = open(newPath)
     d = json.load(f)
+    f.close()
 
     bugsMappedInFile = dict()
 
@@ -80,6 +81,15 @@ def getBugsAssociatedWithJulietTestSuite():
                     bugsMappedInFile[uri] = [bug]
 
     return bugsMappedInFile
+
+
+def getBugsForIds(bugsMappedInFile, idNs):
+    returnDict = dict()
+    for filePath, bugs in bugsMappedInFile.items():
+        if(any(i == bugs[0].idN.split("-")[0] for i in idNs)):
+            returnDict[filePath] = bugs
+
+    return returnDict
 
 
 def addFlagsToFiles(bugsMappedInFile, runIt):
@@ -211,12 +221,16 @@ def interceptBuildForJulietTestSuite(toRun):
     pool.close()
 
 
+def runCodeCheckerStatistics(m):
+    print("")
+    raise NotImplementedError
+
+
 def runCodeChecker(toRun):
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
-    baseDir = os.path.dirname(os.path.realpath(__file__))
     reportPath = os.path.join(baseDir,
                               Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
 
@@ -231,8 +245,6 @@ def runCodeChecker(toRun):
         pathOutBad = os.path.join(pathOut, "BAD")
         print("Running codechecker analysis (bad) for " + idN)
         codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
-
-        raise NotImplementedError
 
 
 if __name__ == '__main__':
@@ -250,28 +262,43 @@ if __name__ == '__main__':
                                      "then check the option below.",
                                      epilog="Happy analysis!",
                                      formatter_class=RawTextHelpFormatter)
+
     parser.add_argument("-o", action="store_true",
                         help="write codechecker flags to the test files. " +
                         "This has to be run once for the CSA analysis " +
                         "to correctly work.")
+
     parser.add_argument("-i", action="store_true",
                         help="run interceptBuild to create the " +
                         "compilation database for each tests. -o " +
                         "has to be used prior to the call of this flag.")
+
     parser.add_argument("-r", action="store_true",
                         help="run codechecker analysis (CSA analysis) " +
                         "for each tests. " +
                         "-i has to have been called prior for " +
                         "this to work individually")
 
+    parser.add_argument("-b", nargs='+',
+                        help="run the corresponding bug ids. " +
+                        "For example: -b 111378 111866.")
+
+    parser.add_argument("-s", action="store_true",
+                        help="run statistics. " +
+                        "For example: -b 111378 111866.")
+
     args = parser.parse_args()
 
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
+
+    if(args.b is not None):
+        bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
 
     if(not args.o and not args.i and not args.r):
         m, e = addFlagsToFiles(bugsMappedInFile, True)
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
+        runCodeCheckerStatistics(m)
         exit(0)
 
     m, e = addFlagsToFiles(bugsMappedInFile, args.o)
@@ -281,3 +308,6 @@ if __name__ == '__main__':
 
     if(args.r):
         runCodeChecker(m)
+
+    if(args.s):
+        runCodeCheckerStatistics(m)

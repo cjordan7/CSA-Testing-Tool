@@ -167,7 +167,11 @@ def interceptBuildForJulietTestSuite(toRun):
 def applyPatch():
     baseDir = os.path.dirname(os.path.realpath(__file__))
     print(baseDir)
-    #subprocess.run(command, shell=True, cwd=path)
+    pathCGC = os.path.join(baseDir, Variables.DATA_CGC_WORKDIR)
+
+    pathPatch = os.path.join(baseDir, Variables.CGC_PATCH_PATH)
+
+    subprocess.run("git apply " + pathPatch, shell=True, cwd=pathCGC)
 
 
 def testMakefile(mappings):
