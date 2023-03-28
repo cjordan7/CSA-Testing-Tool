@@ -2,6 +2,6 @@
 
 __pycache__/
 workdir/
-#reports
+reports
 tests.sh
 *.zip

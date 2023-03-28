@@ -125,13 +125,12 @@ if [ "$debug" = "debug" ]; then
 
   cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=no -DLLVM_USE_LINKER=gold -DLLVM_PARALLEL_LINK_JOBS=1 ../llvm
 
-  ninja
+  ninja -j1
 
   popd
 else
   sudo apt-get install -y clang-15
 fi
-
 
 sudo pip install pycrypto pyyaml matplotlib defusedxml
 sudo apt-get install -y pandoc
@@ -140,8 +139,7 @@ pushd .
 git clone https://github.com/GrammaTech/cgc-cbs --depth 1 workdir/cgc
 cd workdir/cgc
 git checkout 797bd722ea544ab8205446dde13dcfdc059c0989
-
-popd .
+popd
 
 
 pushd .

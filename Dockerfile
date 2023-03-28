@@ -1,5 +1,4 @@
 FROM ubuntu:latest
-MAINTAINER "Cosme Jordan" "email"
 
 ENV CCACHE_DIR=/ccache
 
@@ -14,8 +13,18 @@ RUN apt update ; apt install -yq \
 
 RUN for p in gcc g++ cc c++; do ln -vs /usr/bin/ccache /usr/local/bin/$p;  done
 
-RUN mkdir -p home/CSA-Testing-Tool
-ADD ./INSTALL.sh home/CSA-Testing-Tool/
-RUN ["chmod", "+x", "home/CSA-Testing-Tool/INSTALL.sh"]
-RUN --mount=type=cache,target=/ccache/ home/CSA-Testing-Tool/INSTALL.sh debug
-RUN --mount=type=cache,target=/ccache/ ccache -s
+WORKDIR home/CSA-Testing-Tool
+ADD INSTALL.sh .
+RUN ["chmod", "+x", "INSTALL.sh"]
+RUN --mount=type=cache,target=/ccache/ ./INSTALL.sh
+
+ADD data/ data/
+ADD INSTALL_MAGMA.sh .
+RUN ["chmod", "+x", "INSTALL_MAGMA.sh"]
+RUN ./INSTALL_MAGMA.sh
+
+ADD PREINSTALL_JTS.sh .
+RUN ["chmod", "+x", "PREINSTALL_JTS.sh"]
+
+RUN ./PREINSTALL_JTS.sh
+ADD . .

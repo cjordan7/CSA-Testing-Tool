@@ -18,16 +18,12 @@ class RunCodeChecker():
 
 #TODO: codechecker found line (FP) ? buggy line ?
 #TODO: statistics (FP, TP,..., rates)
-#lineA
-#lineB
-#lineC: JTS: BUGGY:
-#lineD: Codechecker: BUGGY
 
     def codeCheckerCSAAnalysis(self, goodOrBad, outputPath):
         # Use -d to disable checker class
         return "CodeChecker analyze compile_commands"+ \
             goodOrBad + ".json " +\
-            "--ctu -d core -d alpha -d cplusplus -d " +\
+            "--analyzers clangsa  --ctu -d core -d alpha -d cplusplus -d " +\
             "nullability -d optin -d deadcode -d " +\
             "security -d unix -d valist  -d security.FloatLoopCounter -d " +\
             "security.insecureAPI.UncheckedReturn " +\
@@ -73,9 +69,16 @@ class RunCodeChecker():
     def runCodeChecker(self, pathIn, reportPath, checkers, goodOrBad):
         enableCheckers = " ".join(["-e " + i for i in checkers])
 
+        print(self.codeCheckerCSAAnalysis(goodOrBad, reportPath))
         subprocess.run(self.codeCheckerCSAAnalysis(goodOrBad, reportPath) +
                        enableCheckers,
                        shell=True, cwd=pathIn)
+
+    def convertHTML(self, reportPath, goodOrBad):
+        #TODO: Redirect output to nothing
+        subprocess.run("CodeChecker parse --export html --output " +
+                       "./reports_html" + goodOrBad + " ./" + goodOrBad,
+                       shell=True, cwd=reportPath)
 
     def outputInDierectory(self, directory):
         self.parseOutput(directory)

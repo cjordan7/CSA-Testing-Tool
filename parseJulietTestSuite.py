@@ -199,8 +199,8 @@ def workFunction(idN):
     print("Creating compilation database (bad) for " + idN)
     addCodeCheckerFlagToCFlags(path + "/Makefile")
 
-    makeGood = 'make build CODE_CHECKER_FLAG=-DOMIT_BAD'
-    makeBad = 'make build CODE_CHECKER_FLAG=-DOMIT_GOOD'
+    makeGood = 'make build CODE_CHECKER_FLAG=-DOMITBAD'
+    makeBad = 'make build CODE_CHECKER_FLAG=-DOMITGOOD'
 
     codeChecker.compileDB(path, makeGood, "GOOD")
     codeChecker.compileDB(path, makeBad, "BAD")
@@ -223,7 +223,7 @@ def interceptBuildForJulietTestSuite(toRun):
 
 def runCodeCheckerStatistics(m):
     print("")
-    raise NotImplementedError
+#    raise NotImplementedError
 
 
 def runCodeChecker(toRun):
@@ -241,10 +241,12 @@ def runCodeChecker(toRun):
 
         print("Running codechecker analysis (good) for " + idN)
         codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
+        codeChecker.convertHTML(pathOut, "GOOD")
 
         pathOutBad = os.path.join(pathOut, "BAD")
         print("Running codechecker analysis (bad) for " + idN)
         codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
+        codeChecker.convertHTML(pathOut, "BAD")
 
 
 if __name__ == '__main__':
@@ -281,11 +283,11 @@ if __name__ == '__main__':
 
     parser.add_argument("-b", nargs='+',
                         help="run the corresponding bug ids. " +
-                        "For example: -b 111378 111866.")
+                        "For example: -b 111378 111866")
 
     parser.add_argument("-s", action="store_true",
                         help="run statistics. " +
-                        "For example: -b 111378 111866.")
+                        "For example: -s 111378 111866")
 
     args = parser.parse_args()
 
