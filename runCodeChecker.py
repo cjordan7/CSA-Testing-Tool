@@ -40,15 +40,17 @@ class RunCodeChecker():
 
     def runDBCommandAndRenameJSON(self, command, path, name):
         # Make clean just in case
-        subprocess.run("make clean", shell=True, cwd=path,
+        #subprocess.run("make clean", shell=True, cwd=path,
+        #               stdout=subprocess.DEVNULL,
+        #               stderr=subprocess.DEVNULL)
+
+        subprocess.run(command, shell=True, cwd=path,
                        stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL)
 
-        subprocess.run(command, shell=True, cwd=path)
-
-        subprocess.run("make clean", shell=True, cwd=path,
-                       stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL)
+        #subprocess.run("make clean", shell=True, cwd=path,
+        #               stdout=subprocess.DEVNULL,
+        #               stderr=subprocess.DEVNULL)
 
         # Rename compile_commands.json
         subprocess.run("mv compile_commands.json compile_commands" +

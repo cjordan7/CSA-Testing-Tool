@@ -8,6 +8,9 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
+
+import sys
+
 import multiprocessing
 
 
@@ -189,14 +192,17 @@ def addCodeCheckerFlagToCFlags(path):
 
 
 def workFunction(idN):
+    sys.stdout.flush()
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
     print("Creating compilation database (good) for " + idN)
+    sys.stdout.flush()
     path = os.path.join(pathJTS, idN)
 
     print("Creating compilation database (bad) for " + idN)
+    sys.stdout.flush()
     addCodeCheckerFlagToCFlags(path + "/Makefile")
 
     makeGood = 'make build CODE_CHECKER_FLAG=-DOMITBAD'
@@ -210,11 +216,11 @@ def workFunction(idN):
 
 
 def interceptBuildForJulietTestSuite(toRun):
-    print("Run codechecker for juliet test suite")
+    print("Run codechecker for juliet test suite.")
 
     # TODO: Remove?
-    # for idN in toRun:
-    #    workFunction(codeChecker, pathJTS, idN)
+    #for idN in toRun:
+    #    workFunction(idN)
 
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
     pool.map(workFunction, toRun)
@@ -234,6 +240,7 @@ def runCodeChecker(toRun):
     reportPath = os.path.join(baseDir,
                               Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
 
+    #TODO: Parallelize?
     for idN, checkers in toRun.items():
         pathIn = os.path.join(pathJTS, idN)
         pathOut = os.path.join(reportPath, idN)
@@ -297,6 +304,7 @@ if __name__ == '__main__':
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
 
     if(not args.o and not args.i and not args.r):
+        print("Here")
         m, e = addFlagsToFiles(bugsMappedInFile, True)
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)

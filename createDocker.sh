@@ -7,4 +7,4 @@
 
 # docker run csatool:csatool /bin/bash createDocker.sh
 
-python3 parseJulietTestSuite.py -b 111378
+python3 parseJulietTestSuite.py
