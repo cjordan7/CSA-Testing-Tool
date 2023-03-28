@@ -106,7 +106,7 @@ debug=$1
 if [ "$debug" = "debug" ]; then
   # Clone LLVM. We only clone the tags we are interested in.
   # We don't need to clone all commits as we only use the last version
-  git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
+  git clone -b 'llvmorg-16.0.0' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
 
 
   # TODO: Give parameter to build from source
@@ -129,7 +129,7 @@ if [ "$debug" = "debug" ]; then
 
   popd
 else
-  sudo apt-get install -y clang-15
+  sudo apt-get install -y clang-16 libclang-common-16-dev libclang-cpp16 libclang1-16 llvm-16 llvm-16-dev llvm-16-linker-tools llvm-16-runtime llvm-16-tools clang-tools-16
 fi
 
 sudo pip install pycrypto pyyaml matplotlib defusedxml
@@ -174,7 +174,7 @@ cd workdir/codechecker
 # NOTE: if you want to develop CodeChecker, use the `venv_dev` target instead
 # of `venv`.
 make venv
-source $PWD/venv/bin/activate
+#source $PWD/venv/bin/activate
 
 # Build and install a CodeChecker package.
 make package
