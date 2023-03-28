@@ -106,7 +106,7 @@ debug=$1
 if [ "$debug" = "debug" ]; then
   # Clone LLVM. We only clone the tags we are interested in.
   # We don't need to clone all commits as we only use the last version
-  git clone -b 'llvmorg-16.0.0' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
+  git clone -b 'llvmorg-15.0.6' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
 
 
   # TODO: Give parameter to build from source
@@ -125,11 +125,11 @@ if [ "$debug" = "debug" ]; then
 
   cmake -G Ninja -DLLVM_TARGETS_TO_BUILD=$architecture -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" -DLLVM_ENABLE_ASSERTIONS=yes -DLLVM_ENABLE_Z3_SOLVER=yes -DBUILD_SHARED_LIBS=no -DLLVM_USE_LINKER=gold -DLLVM_PARALLEL_LINK_JOBS=1 ../llvm
 
-  ninja -j1
+  ninja
 
   popd
 else
-  sudo apt-get install -y clang-16 libclang-common-16-dev libclang-cpp16 libclang1-16 llvm-16 llvm-16-dev llvm-16-linker-tools llvm-16-runtime llvm-16-tools clang-tools-16
+  sudo apt-get install -y clang-15 libclang-common-15-dev libclang-cpp15 libclang1-15 llvm-15 llvm-15-dev llvm-15-linker-tools llvm-15-runtime llvm-15-tools clang-tools-15
 fi
 
 sudo pip install pycrypto pyyaml matplotlib defusedxml

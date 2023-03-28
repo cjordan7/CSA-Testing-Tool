@@ -28,9 +28,8 @@ CFLAGS="-fno-builtin -fno-stack-protector"
 LIBSTDCPP=""
 CC_CFLAGS=""
 
-
 echo "all:" > Makefile
-echo "	rm -R obj" >> Makefile
+echo "	rm -fR obj" >> Makefile
 echo "	mkdir obj" >> Makefile
 
 #echo "========================"

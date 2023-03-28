@@ -28,3 +28,7 @@ RUN ["chmod", "+x", "PREINSTALL_JTS.sh"]
 
 RUN ./PREINSTALL_JTS.sh
 ADD . .
+
+RUN ln -s /usr/bin/clang-15 /usr/bin/clang
+RUN ln -s /usr/bin/clang++-15 /usr/bin/clang++
+RUN ln -s /usr/bin/clang-cpp-15 /usr/bin/clang-cpp
