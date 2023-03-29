@@ -32,10 +32,10 @@ class RunCodeChecker():
             "security.insecureAPI.mktemp -d security.insecureAPI.rand -d " +\
             "security.insecureAPI.vfork " +\
             "--analyzer-config clangsa:unroll-loops=true " +\
-            "-o " + outputPath + " --verbose debug "
+            "-o " + outputPath + " --quiet "#--verbose debug
 
     def parseOutput(self, path):
-        return "CodeChecker parse --export html --output " + path +\
+        return "CodeChecker parse --quiet --export html --output " + path +\
             " ./reports"
 
     def runDBCommandAndRenameJSON(self, command, path, name):

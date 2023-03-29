@@ -6,26 +6,26 @@ index ce592b8c..352a4146 100644
                  if ((j = seekTable(t42Tables[i].tag)) >= 0 && checkRegion(tables[j].offset, tables[j].len)) {
                      dumpString(file + tables[j].offset, tables[j].len, outputFunc, outputStream);
                  } else if (needVerticalMetrics && i == t42VheaTable) {
-+#ifdef MAGMA_ENABLE_FIXES
++#ifdef MAGMA_ENABLE_FIXES//PDF017.patch
                      if (unlikely(length > (int)sizeof(vheaTab))) {
                          error(errSyntaxWarning, -1, "length bigger than vheaTab size");
                          length = sizeof(vheaTab);
                      }
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES//PDF017.patch
-+                    MAGMA_LOG("%MAGMA_BUG%", length > (int)sizeof(vheaTab));//PDF017.patch
++                    MAGMA_LOG("%MAGMA_BUG%", length > (int)sizeof(vheaTab));
 +#endif
-+#endif
++#endif//PDF017.patch
                      dumpString(vheaTab, length, outputFunc, outputStream);
                  } else if (needVerticalMetrics && i == t42VmtxTable) {
-+#ifdef MAGMA_ENABLE_FIXES
++#ifdef MAGMA_ENABLE_FIXES//PDF017.patch
                      if (unlikely(length > vmtxTabLength)) {
                          error(errSyntaxWarning, -1, "length bigger than vmtxTab size");
                          length = vmtxTabLength;
                      }
 +#else//PDF017.patch
 +#ifdef MAGMA_ENABLE_CANARIES
-+                    MAGMA_LOG("%MAGMA_BUG%", length > vmtxTabLength);//PDF017.patch
++                    MAGMA_LOG("%MAGMA_BUG%", length > vmtxTabLength);
 +#endif
 +#endif//PDF017.patch
                      dumpString(vmtxTab, length, outputFunc, outputStream);
@@ -43,7 +43,7 @@ index ca1327c2..49fba75d 100644
                      if (likely(ok && val.pos != offset)) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES
-+                    MAGMA_LOG("%MAGMA_BUG%", val.pos == offset);//PDF020.patch
++                    MAGMA_LOG("%MAGMA_BUG%", val.pos == offset);
 +#endif
 +                    if(ok) {
 +#endif//PDF020.patch
@@ -58,7 +58,7 @@ index ca1327c2..49fba75d 100644
                      if (likely(ok && val.pos != offset)) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES//PDF020.patch
-+                    MAGMA_LOG("%MAGMA_BUG%", val.pos == offset);//PDF020.patch
++                    MAGMA_LOG("%MAGMA_BUG%", val.pos == offset);
 +#endif
 +                    if(ok) {
 +#endif//PDF020.patch
@@ -77,7 +77,7 @@ index 9f19e22f..f48965ee 100644
              if (path && path->getCoordsLength() != 0) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES
-+            MAGMA_LOG("%MAGMA_BUG%", !path);//PDF018.patch
++            MAGMA_LOG("%MAGMA_BUG%", !path);
 +#endif//PDF018.patch
 +            if (path->getCoordsLength() != 0) {
 +#endif
@@ -306,7 +306,7 @@ index 53f9384c..17561f3d 100644
 +    }
 +
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", !fileSpec.isDict());//PDF013.patch
++    MAGMA_LOG("%MAGMA_BUG%", !fileSpec.isDict());
 +#endif
 +    obj1 = fileSpec.dictLookup("Desc");
 +    if (obj1.isString())
@@ -618,7 +618,7 @@ index 725b2cf9..69fbde21 100644
              continue;
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(y + yy >= h, y + yy < 0));//PDF019.patch
++        MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(y + yy >= h, y + yy < 0));
 +#endif//PDF019.patch
  
          // one byte per line -- need to mask both left and right side
@@ -636,7 +636,7 @@ index 36da2fcd..19bd8dfb 100644
          bufSize = oLen.getInt();
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES//PDF002.patch
-+    MAGMA_LOG("%MAGMA_BUG%", oLen.getInt() < 0);//PDF002.patch
++    MAGMA_LOG("%MAGMA_BUG%", oLen.getInt() < 0);
 +#endif
 +    if (oLen.isInt()) bufSize = oLen.getInt();
 +#endif//PDF002.patch
@@ -655,7 +655,7 @@ index 36da2fcd..19bd8dfb 100644
              }
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+            MAGMA_LOG("%MAGMA_BUG%", componentPixels != priv->npixels);//PDF005.patch
++            MAGMA_LOG("%MAGMA_BUG%", componentPixels != priv->npixels);
 +#endif//PDF005.patch
              unsigned char *cdata = (unsigned char *)priv->image->comps[component].data;
              int adjust = 0;
@@ -675,7 +675,7 @@ index 03cec1dc..c4683ac8 100644
 -
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+            MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(num <=0, gen < 0));//PDF016.patch
++            MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(num <=0, gen < 0));
 +#endif//PDF016.patch
              Ref r;
              r.num = num;
@@ -691,7 +691,7 @@ index 03cec1dc..c4683ac8 100644
      }
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", pos > LLONG_MAX - length);//PDF012.patch
++    MAGMA_LOG("%MAGMA_BUG%", pos > LLONG_MAX - length);
 +#endif//PDF012.patch
      lexer.setPos(pos + length);
  
@@ -705,7 +705,7 @@ index 03cec1dc..c4683ac8 100644
                  length += 5000;
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES
-+            MAGMA_LOG("%MAGMA_BUG%", length >= LLONG_MAX - pos - 5000);//PDF009.patch
++            MAGMA_LOG("%MAGMA_BUG%", length >= LLONG_MAX - pos - 5000);
 +#endif
 +            length += 5000;
 +#endif//PDF009.patch
@@ -724,7 +724,7 @@ index 3fd590b8..dcdcb160 100644
      if (!t3GlyphStack || t3GlyphStack->haveDx) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES//PDF010.patch
-+    MAGMA_LOG("%MAGMA_BUG%", t3GlyphStack == nullptr);//PDF010.patch
++    MAGMA_LOG("%MAGMA_BUG%", t3GlyphStack == nullptr);
 +#endif
 +    if (t3GlyphStack->haveDx) {
 +#endif//PDF010.patch
@@ -742,7 +742,7 @@ index 3fd590b8..dcdcb160 100644
          }
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(surface_width == 0, surface_height == 0));//PDF001.patch
++        MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(surface_width == 0, surface_height == 0));
 +#endif//PDF001.patch
          repeatX = result_width / surface_width;
          repeatY = result_height / surface_height;
@@ -759,7 +759,7 @@ index 09773861..ec7c0a05 100644
      if (nComps <= 0 || nBits <= 0 || nVals > INT_MAX / nBits - 7 || width > INT_MAX / nComps) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", nComps <= 0);//PDF021.patch
++    MAGMA_LOG("%MAGMA_BUG%", nComps <= 0);
 +#endif//PDF021.patch
 +    if (nBits <= 0 || nVals > INT_MAX / nBits - 7 || width > INT_MAX / nComps) {
 +#endif
@@ -774,7 +774,7 @@ index 09773861..ec7c0a05 100644
          if (nComps <= 0 || width > INT_MAX / nComps) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", nComps <= 0);//PDF021.patch
++        MAGMA_LOG("%MAGMA_BUG%", nComps <= 0);
 +#endif//PDF021.patch
 +        if (width > INT_MAX / nComps) {
 +#endif//PDF021.patch
@@ -1049,7 +1049,7 @@ index 3350f6e9..d84d6a86 100644
 -
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", i < 0);//PDF011.patch
++    MAGMA_LOG("%MAGMA_BUG%", i < 0);
 +#endif//PDF011.patch
      if (i >= size || entries[i].type == xrefEntryNone) {
  
@@ -1129,7 +1129,7 @@ index f5af0d60..09dca297 100644
          height = 0;
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES//PDF006.patch
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(src->getWidth() - xSrc < width, \//PDF006.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(src->getWidth() - xSrc < width, \
 +                        MAGMA_OR(src->getHeight() - ySrc < height, \
 +                        MAGMA_OR(bitmap->getWidth() - xDest < width, \
 +                        bitmap->getHeight() - yDest < height))) \
@@ -1152,7 +1152,7 @@ index 98a49912..3864867d 100644
                  break;
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES//PDF004.patch
-+            MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(intersectionIndex < 0, (unsigned)intersectionIndex >= allIntersections.size()));//PDF004.patch
++            MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(intersectionIndex < 0, (unsigned)intersectionIndex >= allIntersections.size()));
 +#endif
              const auto &line = allIntersections[intersectionIndex];
              interIdx = 0;
@@ -1209,7 +1209,7 @@ index bd55ac7d..42d14b78 100644
 +#endif//PDF003.patch
              memset(zero, 0, sizeof(zero));
 +#ifdef MAGMA_ENABLE_CANARIES
-+            MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(colorMap->getColorSpace2() == nullptr, (size_t)colorMap->getNumPixelComps() > sizeof(zero)));//PDF003.patch
++            MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(colorMap->getColorSpace2() == nullptr, (size_t)colorMap->getNumPixelComps() > sizeof(zero)));
 +#endif//PDF003.patch
              colorMap->getGray(zero, &gray);
              if (colToByte(gray) == 0)
@@ -1235,7 +1235,7 @@ index 4bb9d8ab..64fd2e36 100644
      if (colorMap) {
          memset(zero, 0, sizeof(zero));
 +#ifdef MAGMA_ENABLE_CANARIES//PDF003.patch
-+        MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(colorMap->getColorSpace2() == nullptr, (size_t)colorMap->getNumPixelComps() > sizeof(zero)));//PDF003.patch
++        MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(colorMap->getColorSpace2() == nullptr, (size_t)colorMap->getNumPixelComps() > sizeof(zero)));
 +#endif
          colorMap->getGray(zero, &gray);
          if (colToByte(gray) == 0)

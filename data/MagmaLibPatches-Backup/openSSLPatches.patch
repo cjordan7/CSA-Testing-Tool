@@ -59,7 +59,7 @@ index 19e41ec73e..f32195cc55 100644
 +             * iteration will result in dereferencing `n` outside the bounds of
 +             * `b`.
 +             */
-+            MAGMA_LOG("%MAGMA_BUG%", i == 0);//SSL001.patch
++            MAGMA_LOG("%MAGMA_BUG%", i == 0);
 +#endif//SSL001.patch
 +        }
 +        /* Complement and increment next octet */
@@ -106,7 +106,7 @@ index 6b638bd80c..c1e5c4f6c7 100644
      case V_ASN1_OTHER:
      default:
 +#ifdef MAGMA_ENABLE_CANARIES//SSL014.patch
-+    MAGMA_LOG("%MAGMA_BUG%", a->type == V_ASN1_BOOLEAN);//SSL014.patch
++    MAGMA_LOG("%MAGMA_BUG%", a->type == V_ASN1_BOOLEAN);
 +#endif//SSL014.patch
          result = ASN1_STRING_cmp((ASN1_STRING *)a->value.ptr,
                                   (ASN1_STRING *)b->value.ptr);
@@ -159,7 +159,7 @@ index 304c2ea08d..28584868de 100644
              }
 +#else//SSL016.patch
 +#ifdef MAGMA_ENABLE_CANARIES//SSL016.patch
-+            MAGMA_LOG("%MAGMA_BUG%", udp[0] == 0);//SSL016.patch
++            MAGMA_LOG("%MAGMA_BUG%", udp[0] == 0);
 +#endif//SSL016.patch
 +            if (ubits <= BN_BITS2 && udp[0] == 1)
 +                    break;
@@ -206,7 +206,7 @@ index 2c047fa039..3a25a3c5df 100644
 +    * Potential integer overflow if we supply a large amount
 +    * of input data
 +    */
-+    MAGMA_LOG("%MAGMA_BUG%", INT_MAX - inl < ctx->num);//SSL006.patch
++    MAGMA_LOG("%MAGMA_BUG%", INT_MAX - inl < ctx->num);
 +#endif//SSL006.patch
 +    if ((ctx->num + inl) < ctx->length) {
 +#endif//SSL006.patch
@@ -234,7 +234,7 @@ index 607f9fc73a..0bc19b6a69 100644
          if (len < MDC2_BLOCK - i) {
 +#else
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", SIZE_MAX - len < i);//SSL007.patch
++        MAGMA_LOG("%MAGMA_BUG%", SIZE_MAX - len < i);
 +#endif//SSL007.patch
 +        if (i + len < MDC2_BLOCK) {
 +#endif
@@ -260,7 +260,7 @@ index 441bf78bba..ee713b4dd3 100644
      }
 +#else//SSL015.patch
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr));//SSL015.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr));
 +#endif
 +#endif//SSL015.patch
  
@@ -281,7 +281,7 @@ index 441bf78bba..ee713b4dd3 100644
  
 +#else///SSL015.patch
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr == NULL));///SSL015.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr == NULL));
 +#endif
 +#endif///SSL015.patch
      i = OBJ_obj2nid(p7->type);
@@ -298,7 +298,7 @@ index 441bf78bba..ee713b4dd3 100644
      }
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(data_body == NULL, in_bio == NULL));//SSL011.patch
++        MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(data_body == NULL, in_bio == NULL));
 +#endif//SSL011.patch
  
      /* We will be checking the signature */
@@ -331,7 +331,7 @@ index 441bf78bba..ee713b4dd3 100644
 -
 +#else//SSL015.patch
 +#ifdef MAGMA_ENABLE_CANARIES//SSL015.patch
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr == NULL));//SSL015.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr == NULL));
 +#endif//SSL015.patch
 +#endif//SSL015.patch
      ctx_tmp = EVP_MD_CTX_new();
@@ -351,7 +351,7 @@ index 441bf78bba..ee713b4dd3 100644
      }
 +#else//SSL015.patch
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr));//SSL015.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(p7 == NULL, p7->d.ptr));
 +#endif
 +#endif//SSL015.patch
  
@@ -370,7 +370,7 @@ index b1580ca48c..5a3123efb1 100644
 +#else//SSL013.patch
 +    int magma_int = ossl_rsa_pss_to_ctx(ctx, NULL, sigalg, pkey);
 +#ifdef MAGMA_ENABLE_CANARIES//SSL013.patch
-+    MAGMA_LOG("%MAGMA_BUG%", magma_int < 0);//SSL013.patch
++    MAGMA_LOG("%MAGMA_BUG%", magma_int < 0);
 +#endif//SSL013.patch
 +    if (magma_int) {
 +#endif//SSL013.patch
@@ -397,7 +397,7 @@ index 8bb35bd8a3..655dec9a72 100644
 +    /**
 +    *This bug will do a 1 byte overread when the length is too short
 +    */
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(f != NULL, \//SSL009.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(f != NULL, \
 +            MAGMA_AND(f->addressFamily != NULL, \
 +            MAGMA_AND(f->addressFamily->data != NULL, \
 +            f->addressFamily->length < 2)))
@@ -434,7 +434,7 @@ index 12c6d6f78b..77c6432d44 100644
 +             * will overread the `q` buffer, since it points to a fixed-size
 +             * buffer whose size is less than `num`.
 +             */
-+            MAGMA_LOG("%MAGMA_BUG%", num > (int)sizeof(ebcdic_buf));//SSL004.patch
++            MAGMA_LOG("%MAGMA_BUG%", num > (int)sizeof(ebcdic_buf));
 +#endif
 +#endif
              q = ebcdic_buf;
@@ -453,7 +453,7 @@ index e3f5c2add1..879b30e772 100644
          goto err;
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%",pktmp == NULL);//SSL012.patch
++    MAGMA_LOG("%MAGMA_BUG%",pktmp == NULL);
 +#endif//SSL012.patch
      i = X509_REQ_set_pubkey(ret, pktmp);
      if (!i)
@@ -478,7 +478,7 @@ index 18c6172c98..c83ea9b0e5 100644
 +#else//SSL017.patch
 +        if (crl_score == best_score) {
 +#ifdef MAGMA_ENABLE_CANARIES//SSL017.patch
-+            MAGMA_LOG("%MAGMA_BUG%", best_crl == NULL);//SSL017.patch
++            MAGMA_LOG("%MAGMA_BUG%", best_crl == NULL);
 +#endif//SSL017.patch
 +#endif//SSL017.patch
              int day, sec;
@@ -500,7 +500,7 @@ index 28e02e642c..0d1378db71 100644
              } else {
 +#else//SSL019.patch
 +#ifdef MAGMA_ENABLE_CANARIES//SSL019.patch
-+            MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(peek, \//SSL019.patch
++            MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(peek, \
 +                                MAGMA_AND(SSL3_RECORD_get_length(rr) == 0, \
 +                                          !SSL3_RECORD_is_read(rr))));
 +#endif//SSL019.patch
@@ -538,7 +538,7 @@ index e8e57cd5d9..c1e87805ca 100644
 +     * If there is a pending request packet and there exists at least one
 +     * previous request in the stack, then unbounded memory growth is possible.
 +     */
-+    MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(PACKET_remaining(&responder_id_list) > 0, \//SSL005.patch
++    MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(PACKET_remaining(&responder_id_list) > 0, \
 +        sk_OCSP_RESPID_num(s->ext.ocsp.ids) > 0));
 +#endif
 +#endif//SSL005.patch
@@ -557,7 +557,7 @@ index 4c463974ea..c63b50bf1d 100644
      s->init_msg = s->init_buf->data + msg_offset;
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES//SSL002.patch
-+    MAGMA_LOG("%MAGMA_BUG%", s->init_msg != (s->init_buf->data + msg_offset));//SSL002.patch
++    MAGMA_LOG("%MAGMA_BUG%", s->init_msg != (s->init_buf->data + msg_offset));
 +#endif//SSL002.patch
  
      return 1;
@@ -577,7 +577,7 @@ index d5aa8797ff..1a7ea0c1df 100644
      }
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%",ckey == NULL);//SSL008.patch
++    MAGMA_LOG("%MAGMA_BUG%",ckey == NULL);
 +#endif//SSL008.patch
  
      if (ssl_derive(s, ckey, skey, 0) == 0) {
@@ -593,7 +593,7 @@ index d5aa8797ff..1a7ea0c1df 100644
      }
 +#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%",ckey == NULL);//SSL008.patch
++    MAGMA_LOG("%MAGMA_BUG%",ckey == NULL);
 +#endif//SSL008.patch
  
      if (ssl_derive(s, ckey, skey, 0) == 0) {
@@ -617,7 +617,7 @@ index 8c588fd590..3ae6a19cd6 100644
          return 0;
      }
 +#ifdef MAGMA_ENABLE_CANARIES//SSL018.patch
-+    MAGMA_LOG("%MAGMA_BUG%", msg_len > dtls1_max_handshake_message_len(s));//SSL018.patch
++    MAGMA_LOG("%MAGMA_BUG%", msg_len > dtls1_max_handshake_message_len(s));
 +#endif//SSL018.patch
  
      if (s->d1->r_msg_hdr.frag_off == 0) { /* first fragment */
@@ -640,7 +640,7 @@ index 3579202c22..1ef3e7be79 100644
          goto end;
      }
 +#ifdef MAGMA_ENABLE_CANARIES//SSL020.patch
-+    MAGMA_LOG("%MAGMA_BUG%", eticklen <= TLSEXT_KEYNAME_LENGTH + EVP_CIPHER_CTX_get_iv_length(ctx) + mlen);//SSL020.patch
++    MAGMA_LOG("%MAGMA_BUG%", eticklen <= TLSEXT_KEYNAME_LENGTH + EVP_CIPHER_CTX_get_iv_length(ctx) + mlen);
 +#endif//SSL020.patch
      eticklen -= mlen;
      /* Check HMAC of encrypted ticket */

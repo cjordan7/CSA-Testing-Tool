@@ -8,6 +8,9 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
+import threading
+from threading import Thread
+
 from bs4 import BeautifulSoup
 
 import pickle
@@ -195,7 +198,11 @@ def addCodeCheckerFlagToCFlags(path):
     f.close()
 
 
+my_lock = threading.Lock()
+a = 0
+    
 def workFunction(idN):
+    global a
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
@@ -212,6 +219,10 @@ def workFunction(idN):
     codeChecker.compileDB(path, makeGood, "GOOD")
     codeChecker.compileDB(path, makeBad, "BAD")
 
+    with my_lock:
+        a += 1
+        print(a)
+
     # codeChecker.runInterceptBuild(path, makeGood, "GOOD")
     # codeChecker.runInterceptBuild(path, makeBad, "BAD")
 
@@ -219,11 +230,8 @@ def workFunction(idN):
 def interceptBuildForJulietTestSuite(toRun):
     print("Run codechecker for juliet test suite.")
 
-    # TODO: Remove?
-    #for idN in toRun:
-    #    workFunction(idN)
-
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(1)
     pool.map(workFunction, toRun)
     pool.close()
 
@@ -349,12 +357,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
-
+    print(len(bugsMappedInFile))
     if(args.b is not None):
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
 
     if(not args.o and not args.i and not args.r and not args.s):
-        print("Here")
         m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, True)
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)

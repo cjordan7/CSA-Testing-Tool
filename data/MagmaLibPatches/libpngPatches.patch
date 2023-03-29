@@ -1,5 +1,5 @@
 diff --git a/png.c b/png.c
-index fc0956426..941b641d0 100644
+index 869cd395c..b53d17e07 100644
 --- a/png.c
 +++ b/png.c
 @@ -616,6 +616,9 @@ png_free_data(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 mask,
@@ -7,8 +7,8 @@ index fc0956426..941b641d0 100644
  
  #ifdef PNG_eXIf_SUPPORTED
 +#ifdef MAGMA_ENABLE_CANARIES
-+   MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(info_ptr->eXIf_buf != NULL, (mask & info_ptr->free_me & PNG_FREE_EXIF) == 0));
-+#endif // PNG006.patch
++   MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(info_ptr->eXIf_buf != NULL, (mask & info_ptr->free_me & PNG_FREE_EXIF) == 0))//PNG006.patch;
++#endif
     /* Free any eXIf entry */
     if (((mask & PNG_FREE_EXIF) & info_ptr->free_me) != 0)
     {
@@ -18,8 +18,7 @@ index fc0956426..941b641d0 100644
         */
 +#ifdef MAGMA_ENABLE_FIXES
        png_warning(png_ptr, "Image width is too large for this architecture");
--      error = 1;
-+      error = 1; // PNG005.patch
+       error = 1;
 +#endif
     }
  
@@ -31,7 +30,7 @@ index fc0956426..941b641d0 100644
 +#ifdef MAGMA_ENABLE_FIXES
 +#else
 +   image->flags |= PNG_IMAGE_FLAG_INVALID;
-+#endif // PNG002.patch
++#endif
 +
     /* Success. */
     return 1;
@@ -43,13 +42,32 @@ index fc0956426..941b641d0 100644
 +#ifdef MAGMA_ENABLE_FIXES
        png_image_free_function(image);
 +#else
-+      (void)png_safe_execute(image, png_image_free_function, image); // PNG002.patch
++      (void)png_safe_execute(image, png_image_free_function, image);
 +#endif
        image->opaque = NULL;
     }
  }
+diff --git a/png.h b/png.h
+index 4731d0777..b5541cc23 100644
+--- a/png.h
++++ b/png.h
+@@ -2969,6 +2969,14 @@ typedef struct
+     * because that call initializes the 'flags' field.
+     */
+ 
++#ifdef MAGMA_ENABLE_FIXES
++#else
++#define PNG_IMAGE_FLAG_INVALID 0x08
++   /* This indicates that the image and all its allocated resources have been
++       * freed or released and are not available for consumption.
++    */
++#endif
++
+ #ifdef PNG_SIMPLIFIED_READ_SUPPORTED
+ /* READ APIs
+  * ---------
 diff --git a/pngerror.c b/pngerror.c
-index ec3a709b9..5b690d5ed 100644
+index ec3a709b9..0e276e4f6 100644
 --- a/pngerror.c
 +++ b/pngerror.c
 @@ -951,6 +951,10 @@ png_safe_execute(png_imagep image_in, int (*function)(png_voidp), png_voidp arg)
@@ -57,14 +75,14 @@ index ec3a709b9..5b690d5ed 100644
     }
  
 +#ifdef MAGMA_ENABLE_CANARIES
-+   MAGMA_LOG("%MAGMA_BUG%", (image->flags & PNG_IMAGE_FLAG_INVALID) != 0); // PNG002.patch
++   MAGMA_LOG("%MAGMA_BUG%", (image->flags & PNG_IMAGE_FLAG_INVALID) != 0)//PNG002.patch;
 +#endif
 +
     image->opaque->error_buf = saved_error_buf;
  
     /* And do the cleanup prior to any failure return. */
 diff --git a/pngrtran.c b/pngrtran.c
-index 238f5afe7..4a3c47b6f 100644
+index 238f5afe7..8866c0f15 100644
 --- a/pngrtran.c
 +++ b/pngrtran.c
 @@ -1959,8 +1959,13 @@ png_read_transform_info(png_structrp png_ptr, png_inforp info_ptr)
@@ -74,29 +92,28 @@ index 238f5afe7..4a3c47b6f 100644
 +#ifdef MAGMA_ENABLE_FIXES
           if (png_ptr->palette == NULL)
              png_error (png_ptr, "Palette is NULL in indexed image");
-+#endif// PNG007.patch
++#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+         MAGMA_LOG("%MAGMA_BUG%", png_ptr->palette == NULL);// PNG007.patch
++         MAGMA_LOG("%MAGMA_BUG%", png_ptr->palette == NULL)//PNG007.patch;
 +#endif
        }
        else
        {
 diff --git a/pngrutil.c b/pngrutil.c
-index ca060dd15..a95db6baa 100644
+index 2694fa72a..1e2453dcd 100644
 --- a/pngrutil.c
 +++ b/pngrutil.c
 @@ -983,8 +983,14 @@ png_handle_PLTE(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
     else
        max_palette_length = PNG_MAX_PALETTE_LENGTH;
  
--   if (num > max_palette_length)
 +#ifdef MAGMA_ENABLE_FIXES
-+   if (num > max_palette_length) // PNG003.patch
+    if (num > max_palette_length)
        num = max_palette_length;
 +#endif
 +
 +#ifdef MAGMA_ENABLE_CANARIES
-+   MAGMA_LOG("%MAGMA_BUG%", num > max_palette_length); //PNG003.patch
++   MAGMA_LOG("%MAGMA_BUG%", num > max_palette_length)//PNG003.patch;
 +#endif
  
  #ifdef PNG_POINTER_INDEXING_SUPPORTED
@@ -107,11 +124,11 @@ index ca060dd15..a95db6baa 100644
  
 +#ifdef MAGMA_ENABLE_FIXES
     info_ptr->free_me |= PNG_FREE_EXIF;
-+#endif // PNG006.patch
++#endif
  
     info_ptr->eXIf_buf = png_voidcast(png_bytep,
               png_malloc_warn(png_ptr, length));
-@@ -3166,12 +3174,27 @@ png_check_chunk_length(png_const_structrp png_ptr, png_uint_32 length)
+@@ -3162,12 +3170,27 @@ png_check_chunk_length(png_const_structrp png_ptr, png_uint_32 length)
     if (png_ptr->chunk_name == png_IDAT)
     {
        png_alloc_size_t idat_limit = PNG_UINT_31_MAX;
@@ -128,65 +145,65 @@ index ca060dd15..a95db6baa 100644
 +         * (size_t)png_ptr->channels
 +         * (png_ptr->bit_depth > 8? 2: 1)
 +         + 1
-+         + (png_ptr->interlaced? 6: 0); // PNG001
++         + (png_ptr->interlaced? 6: 0);
 +
 +#ifdef MAGMA_ENABLE_CANARIES
-+      MAGMA_LOG("%MAGMA_BUG%", row_factor_l == ((size_t)1 << (sizeof(png_uint_32) * 8)));
++      MAGMA_LOG("%MAGMA_BUG%", row_factor_l == ((size_t)1 << (sizeof(png_uint_32) * 8)))//PNG001.patch;
 +#endif
 +
-+      size_t row_factor = (png_uint_32)row_factor_l; // // PNG001
++      size_t row_factor = (png_uint_32)row_factor_l;
 +#endif
        if (png_ptr->height > PNG_UINT_32_MAX/row_factor)
           idat_limit = PNG_UINT_31_MAX;
        else
-@@ -3202,7 +3225,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
+@@ -3198,7 +3221,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
  {
     unsigned int pixel_depth = png_ptr->transformed_pixel_depth;
     png_const_bytep sp = png_ptr->row_buf + 1;
 +#ifdef MAGMA_ENABLE_FIXES
     png_alloc_size_t row_width = png_ptr->width;
 +#else
-+   png_uint_32 row_width = png_ptr->width;  // PNG004.patch
++   png_uint_32 row_width = png_ptr->width;
 +#endif
     unsigned int pass = png_ptr->pass;
     png_bytep end_ptr = 0;
     png_byte end_byte = 0;
-@@ -3452,6 +3479,10 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
+@@ -3448,6 +3475,10 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
              png_error(png_ptr, "invalid user transform pixel depth");
  
           pixel_depth >>= 3; /* now in bytes */
 +
 +#ifdef MAGMA_ENABLE_CANARIES
-+         MAGMA_LOG("%MAGMA_BUG%", (row_width * pixel_depth) != (u_int64_t)row_width * pixel_depth);
++         MAGMA_LOG("%MAGMA_BUG%", (row_width * pixel_depth) != (u_int64_t)row_width * pixel_depth)//PNG004.patch;
 +#endif
           row_width *= pixel_depth;
  
           /* Regardless of pass number the Adam 7 interlace always results in a
-@@ -3477,7 +3508,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
+@@ -3473,7 +3504,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
  
              /* But don't allow this number to exceed the actual row width. */
              if (bytes_to_copy > row_width)
 +#ifdef MAGMA_ENABLE_FIXES
                 bytes_to_copy = (unsigned int)/*SAFE*/row_width;
 +#else
-+               bytes_to_copy = row_width;  // PNG004.patch
++               bytes_to_copy = row_width;
 +#endif
           }
  
           else /* normal row; Adam7 only ever gives us one pixel to copy. */
-@@ -3657,7 +3692,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
+@@ -3653,7 +3688,11 @@ png_combine_row(png_const_structrp png_ptr, png_bytep dp, int display)
                    dp += bytes_to_jump;
                    row_width -= bytes_to_jump;
                    if (bytes_to_copy > row_width)
 +#ifdef MAGMA_ENABLE_FIXES
                       bytes_to_copy = (unsigned int)/*SAFE*/row_width;
 +#else
-+                     bytes_to_copy = row_width;  // PNG004.patch
++                     bytes_to_copy = row_width;
 +#endif
                 }
           }
  
-@@ -4593,6 +4632,23 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
+@@ -4589,6 +4628,23 @@ defined(PNG_USER_TRANSFORM_PTR_SUPPORTED)
     row_bytes = PNG_ROWBYTES(max_pixel_depth, row_bytes) +
         1 + ((max_pixel_depth + 7) >> 3U);
  
@@ -204,14 +221,14 @@ index ca060dd15..a95db6baa 100644
 +    /* The input width resulted in an integer overflow, which could
 +     * later cause a heap buffer overflow due to a bad allocation size
 +     */
-+   MAGMA_LOG("%MAGMA_BUG%", row_bytes_check < ((png_ptr->width + 7) & ~((png_uint_32)7)));  // PNG005.patch
++   MAGMA_LOG("%MAGMA_BUG%", row_bytes_check < ((png_ptr->width + 7) & ~((png_uint_32)7)))//PNG005.patch;
 +#endif
 +
  #ifdef PNG_MAX_MALLOC_64K
     if (row_bytes > (png_uint_32)65536L)
        png_error(png_ptr, "This image requires a row greater than 64KB");
 diff --git a/pngset.c b/pngset.c
-index 8c372cf41..5221556a6 100644
+index 9f4489bcf..574985064 100644
 --- a/pngset.c
 +++ b/pngset.c
 @@ -583,7 +583,11 @@ png_set_PLTE(png_structrp png_ptr, png_inforp info_ptr,
@@ -221,7 +238,7 @@ index 8c372cf41..5221556a6 100644
 +#ifdef MAGMA_ENABLE_FIXES
     if (num_palette < 0 || num_palette > (int) max_palette_length)
 +#else
-+   if (num_palette < 0 || num_palette > PNG_MAX_PALETTE_LENGTH)  // PNG003.patch
++   if (num_palette < 0 || num_palette > PNG_MAX_PALETTE_LENGTH)
 +#endif
     {
        if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE)
@@ -233,7 +250,7 @@ index 8c372cf41..5221556a6 100644
 +#ifdef MAGMA_ENABLE_FIXES
        png_error(png_ptr, "Invalid palette");
 +#else
-+      png_chunk_report(png_ptr, "Invalid palette", PNG_CHUNK_ERROR); // PNG007.patch
++      png_chunk_report(png_ptr, "Invalid palette", PNG_CHUNK_ERROR);
 +      return;
 +#endif
     }

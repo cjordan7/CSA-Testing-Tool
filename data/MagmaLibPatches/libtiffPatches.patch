@@ -1,725 +1,126 @@
-diff --git a/libtiff/tif_dir.c b/libtiff/tif_dir.c
-index a6c254fc..a564b0b0 100644
---- a/libtiff/tif_dir.c
-+++ b/libtiff/tif_dir.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1988-1997 Sam Leffler
-  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Sam Leffler and Silicon Graphics may not be used in any advertising or
-  * publicity relating to the software without the specific, prior written
-  * permission of Sam Leffler and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
-  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
-@@ -91,7 +91,7 @@ static int
- setExtraSamples(TIFF* tif, va_list ap, uint32_t* v)
- {
- /* XXX: Unassociated alpha data == 999 is a known Corel Draw bug, see below */
--#define EXTRASAMPLE_COREL_UNASSALPHA 999 
-+#define EXTRASAMPLE_COREL_UNASSALPHA 999
- 
- 	uint16_t* va;
- 	uint32_t i;
-@@ -110,7 +110,7 @@ setExtraSamples(TIFF* tif, va_list ap, uint32_t* v)
- 			 * XXX: Corel Draw is known to produce incorrect
- 			 * ExtraSamples tags which must be patched here if we
- 			 * want to be able to open some of the damaged TIFF
--			 * files: 
-+			 * files:
- 			 */
- 			if (va[i] == EXTRASAMPLE_COREL_UNASSALPHA)
- 				va[i] = EXTRASAMPLE_UNASSALPHA;
-@@ -118,7 +118,7 @@ setExtraSamples(TIFF* tif, va_list ap, uint32_t* v)
- 				return 0;
- 		}
- 	}
--
-+#ifdef MAGMA_ENABLE_FIXES//TIF012.patch
-         if ( td->td_transferfunction[0] != NULL && (td->td_samplesperpixel - *v > 1) &&
-                 !(td->td_samplesperpixel - td->td_extrasamples > 1))
-         {
-@@ -128,8 +128,8 @@ setExtraSamples(TIFF* tif, va_list ap, uint32_t* v)
-                 TIFFClrFieldBit(tif,FIELD_TRANSFERFUNCTION);
-                 _TIFFfree(td->td_transferfunction[0]);
-                 td->td_transferfunction[0] = NULL;
--        }
--
-+        }//TIF012.patch
-+#endif//TIF012.patch
- 	td->td_extrasamples = (uint16_t) *v;
- 	_TIFFsetShortArray(&td->td_sampleinfo, va, td->td_extrasamples);
- 	return 1;
-@@ -138,7 +138,7 @@ setExtraSamples(TIFF* tif, va_list ap, uint32_t* v)
- }
- 
- /*
-- * Confirm we have "samplesperpixel" ink names separated by \0.  Returns 
-+ * Confirm we have "samplesperpixel" ink names separated by \0.  Returns
-  * zero if the ink names are not as expected.
-  */
- static uint32_t
-@@ -183,9 +183,9 @@ _TIFFVSetField(TIFF* tif, uint32_t tag, va_list ap)
- 	    return 0;
- 	/*
- 	 * We want to force the custom code to be used for custom
--	 * fields even if the tag happens to match a well known 
-+	 * fields even if the tag happens to match a well known
- 	 * one - important for reinterpreted handling of standard
--	 * tag values in custom directories (i.e. EXIF) 
-+	 * tag values in custom directories (i.e. EXIF)
- 	 */
- 	if (fip->field_bit == FIELD_CUSTOM) {
- 		standard_tag = 0;
-@@ -271,6 +271,7 @@ _TIFFVSetField(TIFF* tif, uint32_t tag, va_list ap)
- 			goto badvalue;
-         if( v != td->td_samplesperpixel )
-         {
-+#ifdef MAGMA_ENABLE_FIXES
-             /* See http://bugzilla.maptools.org/show_bug.cgi?id=2500 */
-             if( td->td_sminsamplevalue != NULL )
-             {
-@@ -302,6 +303,7 @@ _TIFFVSetField(TIFF* tif, uint32_t tag, va_list ap)
-                     _TIFFfree(td->td_transferfunction[0]);
-                     td->td_transferfunction[0] = NULL;
-             }
-+#endif
-         }
- 		td->td_samplesperpixel = (uint16_t) v;
- 		break;
-@@ -626,11 +628,11 @@ _TIFFVSetField(TIFF* tif, uint32_t tag, va_list ap)
- 				goto end;
- 			}
- 
--			if (fip->field_tag == TIFFTAG_DOTRANGE 
-+			if (fip->field_tag == TIFFTAG_DOTRANGE
- 			    && strcmp(fip->field_name,"DotRange") == 0) {
- 				/* TODO: This is an evil exception and should not have been
- 				   handled this way ... likely best if we move it into
--				   the directory structure with an explicit field in 
-+				   the directory structure with an explicit field in
- 				   libtiff 4.1 and assign it a FIELD_ value */
- 				uint16_t v2[2];
- 				v2[0] = (uint16_t)va_arg(ap, int);
-@@ -715,7 +717,7 @@ _TIFFVSetField(TIFF* tif, uint32_t tag, va_list ap)
- 							_TIFFmemcpy(val, &v3, tv_size);
- 							/*-- ToDo: After Testing, this should be removed and tv_size==4 should be set as default. */
- 							if (tv_size != 4) {
--								TIFFErrorExt(0,"TIFFLib: _TIFFVSetField()", "Rational2Double: .set_field_type in not 4 but %d", tv_size); 
-+								TIFFErrorExt(0,"TIFFLib: _TIFFVSetField()", "Rational2Double: .set_field_type in not 4 but %d", tv_size);
- 							}
- 						}
- 					}
-@@ -743,7 +745,7 @@ _TIFFVSetField(TIFF* tif, uint32_t tag, va_list ap)
- 	}
- 	if (status) {
- 		const TIFFField* fip2=TIFFFieldWithTag(tif,tag);
--		if (fip2)                
-+		if (fip2)
- 			TIFFSetFieldBit(tif, fip2->field_bit);
- 		tif->tif_flags |= TIFF_DIRTYDIRECT;
- 	}
-@@ -856,7 +858,7 @@ TIFFUnsetField(TIFF* tif, uint32_t tag)
-         int i;
- 
-         for (i = 0; i < td->td_customValueCount; i++) {
--                
-+
-             tv = td->td_customValues + i;
-             if( tv->info->field_tag == tag )
-                 break;
-@@ -871,7 +873,7 @@ TIFFUnsetField(TIFF* tif, uint32_t tag)
-             td->td_customValueCount--;
-         }
-     }
--        
-+
-     tif->tif_flags |= TIFF_DIRTYDIRECT;
- 
-     return (1);
-@@ -902,14 +904,14 @@ _TIFFVGetField(TIFF* tif, uint32_t tag, va_list ap)
- 
- 	/*
- 	 * We want to force the custom code to be used for custom
--	 * fields even if the tag happens to match a well known 
-+	 * fields even if the tag happens to match a well known
- 	 * one - important for reinterpreted handling of standard
--	 * tag values in custom directories (i.e. EXIF) 
-+	 * tag values in custom directories (i.e. EXIF)
- 	 */
- 	if (fip->field_bit == FIELD_CUSTOM) {
- 		standard_tag = 0;
- 	}
--	
-+
-         if( standard_tag == TIFFTAG_NUMBEROFINKS )
-         {
-             int i;
-@@ -1160,7 +1162,7 @@ _TIFFVGetField(TIFF* tif, uint32_t tag, va_list ap)
- 						   && strcmp(fip->field_name,"DotRange") == 0) {
- 						/* TODO: This is an evil exception and should not have been
- 						   handled this way ... likely best if we move it into
--						   the directory structure with an explicit field in 
-+						   the directory structure with an explicit field in
- 						   libtiff 4.1 and assign it a FIELD_ value */
- 						*va_arg(ap, uint16_t*) = ((uint16_t *)tv->value)[0];
- 						*va_arg(ap, uint16_t*) = ((uint16_t *)tv->value)[1];
-@@ -1234,7 +1236,7 @@ _TIFFVGetField(TIFF* tif, uint32_t tag, va_list ap)
- 										ret_val = 1;
- 										/*-- ToDo: After Testing, this should be removed and tv_size==4 should be set as default. */
- 										if (tv_size != 4) {
--											TIFFErrorExt(0,"TIFFLib: _TIFFVGetField()", "Rational2Double: .set_field_type in not 4 but %d", tv_size); 
-+											TIFFErrorExt(0,"TIFFLib: _TIFFVGetField()", "Rational2Double: .set_field_type in not 4 but %d", tv_size);
- 										}
- 									}
- 								}
-@@ -1380,7 +1382,7 @@ TIFFCreateCustomDirectory(TIFF* tif, const TIFFFieldArray* infoarray)
- 	TIFFDefaultDirectory(tif);
- 
- 	/*
--	 * Reset the field definitions to match the application provided list. 
-+	 * Reset the field definitions to match the application provided list.
- 	 * Hopefully TIFFDefaultDirectory() won't have done anything irreversible
- 	 * based on it's assumption this is an image directory.
- 	 */
-@@ -1404,7 +1406,7 @@ TIFFCreateEXIFDirectory(TIFF* tif)
- }
- 
- /*
-- * Creates the EXIF GPS custom directory 
-+ * Creates the EXIF GPS custom directory
-  */
- int
- TIFFCreateGPSDirectory(TIFF* tif)
-@@ -1424,7 +1426,7 @@ TIFFDefaultDirectory(TIFF* tif)
- 	const TIFFFieldArray* tiffFieldArray;
- 
- 	tiffFieldArray = _TIFFGetFields();
--	_TIFFSetupFields(tif, tiffFieldArray);   
-+	_TIFFSetupFields(tif, tiffFieldArray);
- 
- 	_TIFFmemset(td, 0, sizeof (*td));
- 	td->td_fillorder = FILLORDER_MSB2LSB;
-@@ -1437,7 +1439,7 @@ TIFFDefaultDirectory(TIFF* tif)
- 	td->td_tilelength = 0;
- 	td->td_tiledepth = 1;
- #ifdef STRIPBYTECOUNTSORTED_UNUSED
--	td->td_stripbytecountsorted = 1; /* Our own arrays always sorted. */  
-+	td->td_stripbytecountsorted = 1; /* Our own arrays always sorted. */
- #endif
- 	td->td_resolutionunit = RESUNIT_INCH;
- 	td->td_sampleformat = SAMPLEFORMAT_UINT;
-@@ -1445,9 +1447,9 @@ TIFFDefaultDirectory(TIFF* tif)
- 	td->td_ycbcrsubsampling[0] = 2;
- 	td->td_ycbcrsubsampling[1] = 2;
- 	td->td_ycbcrpositioning = YCBCRPOSITION_CENTERED;
--	tif->tif_postdecode = _TIFFNoPostDecode;  
-+	tif->tif_postdecode = _TIFFNoPostDecode;
- 	tif->tif_foundfield = NULL;
--	tif->tif_tagmethods.vsetfield = _TIFFVSetField;  
-+	tif->tif_tagmethods.vsetfield = _TIFFVSetField;
- 	tif->tif_tagmethods.vgetfield = _TIFFVGetField;
- 	tif->tif_tagmethods.printdir = NULL;
- 	/*
 diff --git a/libtiff/tif_dirread.c b/libtiff/tif_dirread.c
-index d84147a0..7b0ad0e9 100644
+index d84147a0..e1de21f1 100644
 --- a/libtiff/tif_dirread.c
 +++ b/libtiff/tif_dirread.c
-@@ -853,8 +853,8 @@ static enum TIFFReadDirEntryErr TIFFReadDirEntryArrayWithLimit(
-         original_datasize_clamped =
-             ((direntry->tdir_count > 10) ? 10 : (int)direntry->tdir_count) * typesize;
- 
--        /* 
--         * As a sanity check, make sure we have no more than a 2GB tag array 
-+        /*
-+         * As a sanity check, make sure we have no more than a 2GB tag array
-          * in either the current data type or the dest data type.  This also
-          * avoids problems with overflow of tmsize_t on 32bit systems.
-          */
-@@ -1328,7 +1328,7 @@ static enum TIFFReadDirEntryErr TIFFReadDirEntryShortArray(TIFF* tif, TIFFDirEnt
- 		case TIFF_SHORT:
- 			*value=(uint16_t*)origdata;
- 			if (tif->tif_flags&TIFF_SWAB)
--				TIFFSwabArrayOfShort(*value,count);  
-+				TIFFSwabArrayOfShort(*value,count);
- 			return(TIFFReadDirEntryErrOk);
- 		case TIFF_SSHORT:
- 			{
-@@ -3624,7 +3624,7 @@ TIFFReadDirectory(TIFF* tif)
- 			}
- 		}
- 	}
--        
-+
- 	tif->tif_flags &= ~TIFF_BEENWRITING;    /* reset before new dir */
- 	tif->tif_flags &= ~TIFF_BUF4WRITE;      /* reset before new dir */
- 	tif->tif_flags &= ~TIFF_CHOPPEDUPARRAYS;
-@@ -3704,7 +3704,7 @@ TIFFReadDirectory(TIFF* tif)
- 				TIFFWarningExt(tif->tif_clientdata, module,
- 				    "Unknown field with tag %"PRIu16" (0x%"PRIx16") encountered",
- 				    dp->tdir_tag,dp->tdir_tag);
--				/* the following knowingly leaks the 
-+				/* the following knowingly leaks the
- 				   anonymous field structure */
- 				if (!_TIFFMergeFields(tif,
- 					_TIFFCreateAnonField(tif,
-@@ -3798,7 +3798,7 @@ TIFFReadDirectory(TIFF* tif)
- 	 * Setup appropriate structures (by strip or by tile)
- 	 */
- 	if (!TIFFFieldSet(tif, FIELD_TILEDIMENSIONS)) {
--		tif->tif_dir.td_nstrips = TIFFNumberOfStrips(tif);  
-+		tif->tif_dir.td_nstrips = TIFFNumberOfStrips(tif);
- 		tif->tif_dir.td_tilewidth = tif->tif_dir.td_imagewidth;
- 		tif->tif_dir.td_tilelength = tif->tif_dir.td_rowsperstrip;
- 		tif->tif_dir.td_tiledepth = tif->tif_dir.td_imagedepth;
-@@ -3844,7 +3844,7 @@ TIFFReadDirectory(TIFF* tif)
- 	for (di=0, dp=dir; di<dircount; di++, dp++)
- 	{
- 		if (!dp->tdir_ignore) {
--			switch (dp->tdir_tag) 
-+			switch (dp->tdir_tag)
- 			{
- 				case TIFFTAG_MINSAMPLEVALUE:
- 				case TIFFTAG_MAXSAMPLEVALUE:
-@@ -4307,7 +4307,7 @@ TIFFReadDirectory(TIFF* tif)
- 	 */
- 	if ((tif->tif_dir.td_planarconfig==PLANARCONFIG_CONTIG)&&
- 	    (tif->tif_dir.td_nstrips==1)&&
--	    (tif->tif_dir.td_compression==COMPRESSION_NONE)&&  
-+	    (tif->tif_dir.td_compression==COMPRESSION_NONE)&&
- 	    ((tif->tif_flags&(TIFF_STRIPCHOP|TIFF_ISTILED))==TIFF_STRIPCHOP))
-         {
-             ChopUpSingleUncompressedStrip(tif);
-@@ -4325,7 +4325,7 @@ TIFFReadDirectory(TIFF* tif)
-         }
- 
-         /*
--         * Clear the dirty directory flag. 
-+         * Clear the dirty directory flag.
-          */
- 	tif->tif_flags &= ~TIFF_DIRTYDIRECT;
- 	tif->tif_flags &= ~TIFF_DIRTYSTRIP;
-@@ -4524,7 +4524,7 @@ TIFFReadCustomDirectory(TIFF* tif, toff_t diroff,
- 				}
- 			}
- 			if (!dp->tdir_ignore) {
--				switch (dp->tdir_tag) 
-+				switch (dp->tdir_tag)
- 				{
- 					case EXIFTAG_SUBJECTDISTANCE:
- 						(void)TIFFFetchSubjectDistance(tif, dp);
-@@ -4550,7 +4550,7 @@ TIFFReadEXIFDirectory(TIFF* tif, toff_t diroff)
- {
- 	const TIFFFieldArray* exifFieldArray;
- 	exifFieldArray = _TIFFGetExifFields();
--	return TIFFReadCustomDirectory(tif, diroff, exifFieldArray);  
-+	return TIFFReadCustomDirectory(tif, diroff, exifFieldArray);
- }
- 
- /*
-@@ -4561,7 +4561,7 @@ TIFFReadGPSDirectory(TIFF* tif, toff_t diroff)
- {
- 	const TIFFFieldArray* gpsFieldArray;
- 	gpsFieldArray = _TIFFGetGpsFields();
--	return TIFFReadCustomDirectory(tif, diroff, gpsFieldArray);  
-+	return TIFFReadCustomDirectory(tif, diroff, gpsFieldArray);
- }
- 
- static int
-@@ -5737,7 +5737,7 @@ TIFFFetchStripThing(TIFF* tif, TIFFDirEntry* dir, uint32_t nstrips, uint64_t** l
- 	err=TIFFReadDirEntryLong8ArrayWithLimit(tif,dir,&data,nstrips);
- 	if (err!=TIFFReadDirEntryErrOk)
- 	{
--		const TIFFField* fip = TIFFFieldWithTag(tif,dir->tdir_tag); 
-+		const TIFFField* fip = TIFFFieldWithTag(tif,dir->tdir_tag);
- 		TIFFReadDirEntryOutputErr(tif,err,module,fip ? fip->field_name : "unknown tagname",0);
- 		return(0);
- 	}
 @@ -5879,7 +5879,11 @@ static void allocChoppedUpStripArrays(TIFF* tif, uint32_t nstrips,
          if (stripbytes > bytecount)
              stripbytes = bytecount;
          newcounts[i] = stripbytes;
-+#ifdef MAGMA_ENABLE_FIXES//TIF007.patch
++#ifdef MAGMA_ENABLE_FIXES
          newoffsets[i] = stripbytes ? offset : 0;
-+#else//TIF007.patch
++#else
 +        newoffsets[i] = offset;
-+#endif//TIF007.patch
++#endif
          offset += stripbytes;
          bytecount -= stripbytes;
      }
-@@ -5954,19 +5958,36 @@ ChopUpSingleUncompressedStrip(TIFF* tif)
+@@ -5954,12 +5958,22 @@ ChopUpSingleUncompressedStrip(TIFF* tif)
  	 */
  	if (rowsperstrip >= td->td_rowsperstrip)
  		return;
-+#ifdef MAGMA_ENABLE_FIXES//TIF007.patch
++#ifdef MAGMA_ENABLE_FIXES
          nstrips = TIFFhowmany_32(td->td_imagelength, rowsperstrip);
          if( nstrips == 0 )
              return;
 -
-+#else//TIF007.patch
++#else
 +        uint64_t nstrips64 = TIFFhowmany_64(bytecount, stripbytes);
 +        if ((nstrips64==0)||(nstrips64>0xFFFFFFFF)) /* something is wonky, do nothing. */
 +            return;
 +        nstrips = (uint32_t)nstrips64;
-+#endif//TIF007.patch
++#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", nstrips > TIFFhowmany_32(td->td_imagelength, rowsperstrip));
-+#endif//TIF007.patch
++        MAGMA_LOG("%MAGMA_BUG%", nstrips > TIFFhowmany_32(td->td_imagelength, rowsperstrip))//TIF007.patch;
++#endif
          /* If we are going to allocate a lot of memory, make sure that the */
          /* file is as big as needed */
-+#ifdef MAGMA_ENABLE_FIXES//TIF014.patch
++#ifdef MAGMA_ENABLE_FIXES
          if( tif->tif_mode == O_RDONLY &&
              nstrips > 1000000 &&
              (offset >= TIFFGetFileSize(tif) ||
-              stripbytes > (TIFFGetFileSize(tif) - offset) / (nstrips - 1)) )
+@@ -5967,6 +5981,13 @@ ChopUpSingleUncompressedStrip(TIFF* tif)
          {
--            return;
-+            return;//TIF014.patch
+             return;
          }
-+#endif//TIF014.patch
++#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+        MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(tif->tif_mode == O_RDONLY, \
++        MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND(tif->tif_mode == O_RDONLY, //TIF014.patch\
 +	        MAGMA_AND(nstrips > 1000000, \
 +	        MAGMA_OR(offset >= TIFFGetFileSize(tif), \
-+                         stripbytes * (nstrips - 1) > (TIFFGetFileSize(tif) - offset)))));//TIF014.patch
-+#endif//TIF014.patch
++	         stripbytes * (nstrips - 1) > (TIFFGetFileSize(tif) - offset)))));
++#endif
  
          allocChoppedUpStripArrays(tif, nstrips, stripbytes, rowsperstrip);
  }
 diff --git a/libtiff/tif_dirwrite.c b/libtiff/tif_dirwrite.c
-index 032a4be9..b32522c8 100644
+index 032a4be9..e7859456 100644
 --- a/libtiff/tif_dirwrite.c
 +++ b/libtiff/tif_dirwrite.c
-@@ -269,8 +269,8 @@ TIFFWriteCustomDirectory(TIFF* tif, uint64_t* pdiroff)
-  * Similar to TIFFWriteDirectory(), but if the directory has already
-  * been written once, it is relocated to the end of the file, in case it
-  * has changed in size.  Note that this will result in the loss of the
-- * previously used directory space. 
-- */ 
-+ * previously used directory space.
-+ */
- int
- TIFFRewriteDirectory( TIFF *tif )
- {
-@@ -430,7 +430,7 @@ TIFFWriteDirectorySec(TIFF* tif, int isimage, int imagedone, uint64_t* pdiroff)
- 		return (1);
- 
-         _TIFFFillStriles( tif );
--        
-+
- 	/*
- 	 * Clear write state so that subsequent images with
- 	 * different characteristics get the right buffers
-@@ -456,7 +456,7 @@ TIFFWriteDirectorySec(TIFF* tif, int isimage, int imagedone, uint64_t* pdiroff)
-                  * in the previous steps as the "rawcc" data may well be
-                  * a previously read tile/strip in mixed read/write mode.
- 		 */
--		if (tif->tif_rawcc > 0 
-+		if (tif->tif_rawcc > 0
- 		    && (tif->tif_flags & TIFF_BEENWRITING) != 0 )
- 		{
- 		    if( !TIFFFlushData1(tif) )
-@@ -830,7 +830,7 @@ TIFFWriteDirectorySec(TIFF* tif, int isimage, int imagedone, uint64_t* pdiroff)
- 								goto bad;
- 							/*-- ToDo: After Testing, this should be removed and tv_size==4 should be set as default. */
- 							if (tv_size != 4) {
--								TIFFErrorExt(0,"TIFFLib: _TIFFWriteDirectorySec()", "Rational2Double: .set_field_type in not 4 but %d", tv_size); 
-+								TIFFErrorExt(0,"TIFFLib: _TIFFWriteDirectorySec()", "Rational2Double: .set_field_type in not 4 but %d", tv_size);
- 							}
- 						}
- 					}
-@@ -849,7 +849,7 @@ TIFFWriteDirectorySec(TIFF* tif, int isimage, int imagedone, uint64_t* pdiroff)
- 								goto bad;
- 							/*-- ToDo: After Testing, this should be removed and tv_size==4 should be set as default. */
- 							if (tv_size != 4) {
--								TIFFErrorExt(0,"TIFFLib: _TIFFWriteDirectorySec()", "Rational2Double: .set_field_type in not 4 but %d", tv_size); 
-+								TIFFErrorExt(0,"TIFFLib: _TIFFWriteDirectorySec()", "Rational2Double: .set_field_type in not 4 but %d", tv_size);
- 							}
- 						}
- 					}
 @@ -2101,14 +2101,28 @@ TIFFWriteDirectoryTagTransferfunction(TIFF* tif, uint32_t* ndir, TIFFDirEntry* d
  		n=3;
  	if (n==3)
  	{
-+#ifdef MAGMA_ENABLE_CANARIES//TIF009.patch
-+		MAGMA_LOG("%MAGMA_BUG%", tif->tif_dir.td_transferfunction[2] == NULL);
-+#endif//TIF009.patch
++#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%", tif->tif_dir.td_transferfunction[2] == NULL)//TIF009.patch;
++#endif
 +#ifdef MAGMA_ENABLE_FIXES
  		if (tif->tif_dir.td_transferfunction[2] == NULL ||
  		    !_TIFFmemcmp(tif->tif_dir.td_transferfunction[0],tif->tif_dir.td_transferfunction[2],m*sizeof(uint16_t)))
-+#else//TIF009.patch
++#else
 +		if (!_TIFFmemcmp(tif->tif_dir.td_transferfunction[0],tif->tif_dir.td_transferfunction[2],m*sizeof(uint16_t)))
-+#endif//TIF009.patch
++#endif
  			n=2;
  	}
  	if (n==2)
  	{
-+#ifdef MAGMA_ENABLE_CANARIES//TIF009.patch
-+		MAGMA_LOG("%MAGMA_BUG%", tif->tif_dir.td_transferfunction[1] == NULL);//TIF009.patch
-+#endif//TIF009.patch
-+#ifdef MAGMA_ENABLE_FIXES//TIF009.patch
++#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%", tif->tif_dir.td_transferfunction[1] == NULL)//TIF009.patch;
++#endif
++#ifdef MAGMA_ENABLE_FIXES
  		if (tif->tif_dir.td_transferfunction[1] == NULL ||
  		    !_TIFFmemcmp(tif->tif_dir.td_transferfunction[0],tif->tif_dir.td_transferfunction[1],m*sizeof(uint16_t)))
-+#else//TIF009.patch
++#else
 +		if (!_TIFFmemcmp(tif->tif_dir.td_transferfunction[0],tif->tif_dir.td_transferfunction[1],m*sizeof(uint16_t)))
-+#endif//TIF009.patch
++#endif
  			n=1;
  	}
  	if (n==0)
-@@ -2396,12 +2410,12 @@ TIFFWriteDirectoryTagCheckedRational(TIFF* tif, uint32_t* ndir, TIFFDirEntry* di
- 	static const char module[] = "TIFFWriteDirectoryTagCheckedRational";
- 	uint32_t m[2];
- 	assert(sizeof(uint32_t) == 4);
--	if (value < 0) 
-+	if (value < 0)
- 	{
- 		TIFFErrorExt(tif->tif_clientdata, module, "Negative value is illegal");
- 		return 0;
--	} 
--	else if (value != value) 
-+	}
-+	else if (value != value)
- 	{
- 		TIFFErrorExt(tif->tif_clientdata, module, "Not-a-number value is illegal");
- 		return 0;
-@@ -2428,7 +2442,7 @@ TIFFWriteDirectoryTagCheckedRational(TIFF* tif, uint32_t* ndir, TIFFDirEntry* di
- 		m[1]=(uint32_t)(0xFFFFFFFF/value);
- 	}
- #else
--	/*--Rational2Double: New function also used for non-custom rational tags. 
-+	/*--Rational2Double: New function also used for non-custom rational tags.
- 	 *  However, could be omitted here, because TIFFWriteDirectoryTagCheckedRational() is not used by code for custom tags,
- 	 *  only by code for named-tiff-tags like FIELD_RESOLUTION and FIELD_POSITION */
- 	else {
-@@ -2625,7 +2639,7 @@ void DoubleToRational_direct(double value, unsigned long *num, unsigned long *de
- 	/*--- OLD Code for debugging and comparison  ---- */
- 	/* code merged from TIFFWriteDirectoryTagCheckedRationalArray() and TIFFWriteDirectoryTagCheckedRational() */
- 
--	/* First check for zero and also check for negative numbers (which are illegal for RATIONAL) 
-+	/* First check for zero and also check for negative numbers (which are illegal for RATIONAL)
- 	 * and also check for "not-a-number". In each case just set this to zero to support also rational-arrays.
- 	  */
- 	if (value<=0.0 || value != value)
-@@ -3326,14 +3340,14 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
- /* -------------------------------------------------------------------- */
-     if( isMapped(tif) )
-     {
--        TIFFErrorExt( tif->tif_clientdata, module, 
-+        TIFFErrorExt( tif->tif_clientdata, module,
-                       "Memory mapped files not currently supported for this operation." );
-         return 0;
-     }
- 
-     if( tif->tif_diroff == 0 )
-     {
--        TIFFErrorExt( tif->tif_clientdata, module, 
-+        TIFFErrorExt( tif->tif_clientdata, module,
-                       "Attempt to reset field on directory not already on disk." );
-         return 0;
-     }
-@@ -3417,7 +3431,7 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
-     if (!(tif->tif_flags&TIFF_BIGTIFF))
-     {
-         uint32_t value;
--        
-+
-         memcpy( &value, direntry_raw + 4, sizeof(uint32_t) );
-         if (tif->tif_flags&TIFF_SWAB)
-             TIFFSwabLong( &value );
-@@ -3446,7 +3460,7 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
-     {
-         if( tag == TIFFTAG_TILEOFFSETS || tag == TIFFTAG_STRIPOFFSETS )
-         {
--            entry_type = (tif->tif_flags&TIFF_BIGTIFF) ? TIFF_LONG8 : TIFF_LONG; 
-+            entry_type = (tif->tif_flags&TIFF_BIGTIFF) ? TIFF_LONG8 : TIFF_LONG;
-         }
-         else
-         {
-@@ -3539,7 +3553,7 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
-             if((int64_t) ((int32_t *) buf_to_write)[i] != ((int64_t *) data)[i] )
-             {
-                 _TIFFfree( buf_to_write );
--                TIFFErrorExt( tif->tif_clientdata, module, 
-+                TIFFErrorExt( tif->tif_clientdata, module,
-                               "Value exceeds 32bit range of output type." );
-                 return 0;
-             }
-@@ -3557,7 +3571,7 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
-             if((uint64_t) ((uint32_t *) buf_to_write)[i] != ((uint64_t *) data)[i] )
-             {
-                 _TIFFfree( buf_to_write );
--                TIFFErrorExt( tif->tif_clientdata, module, 
-+                TIFFErrorExt( tif->tif_clientdata, module,
-                               "Value exceeds 32bit range of output type." );
-                 return 0;
-             }
-@@ -3665,7 +3679,7 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
-     if( !value_in_entry )
-     {
-         entry_offset = TIFFSeekFile(tif,0,SEEK_END);
--        
-+
-         if (!WriteOK(tif, buf_to_write, count*TIFFDataWidth(datatype))) {
-             _TIFFfree( buf_to_write );
-             TIFFErrorExt(tif->tif_clientdata, module,
-@@ -3741,7 +3755,7 @@ _TIFFRewriteField(TIFF* tif, uint16_t tag, TIFFDataType in_datatype,
-                      tif->tif_name);
-         return 0;
-     }
--    
-+
-     return 1;
- }
- /* vim: set ts=8 sts=8 sw=8 noet: */
 diff --git a/libtiff/tif_jbig.c b/libtiff/tif_jbig.c
-index 74086338..ececf563 100644
+index 74086338..396e3fcc 100644
 --- a/libtiff/tif_jbig.c
 +++ b/libtiff/tif_jbig.c
 @@ -106,12 +106,21 @@ static int JBIGDecode(TIFF* tif, uint8_t* buffer, tmsize_t size, uint16_t s)
  	}
  	else if( (tmsize_t)decodedSize > size )
  	{
-+#ifdef MAGMA_ENABLE_FIXES//TIF013.patch
++#ifdef MAGMA_ENABLE_FIXES
  	    TIFFErrorExt(tif->tif_clientdata, "JBIG",
  	                 "Decoded %lu bytes, whereas %"TIFF_SSIZE_FORMAT" were requested",
  	                 decodedSize, size);
  	    jbg_dec_free(&decoder);
--	    return 0;
-+	    return 0;//TIF013.patch
-+#else//TIF013.patch
+ 	    return 0;
++#else
 +	    TIFFWarningExt(tif->tif_clientdata, "JBIG",
 +	                 "Decoded %lu bytes, whereas %lu were requested",
 +	                 decodedSize, (unsigned long)size);
-+#endif//TIF013.patch
++#endif
  	}
-+#ifdef MAGMA_ENABLE_CANARIES//TIF013.patch
-+	MAGMA_LOG("%MAGMA_BUG%", (tmsize_t)decodedSize > size);
-+#endif//TIF013.patch
++#ifdef MAGMA_ENABLE_CANARIES
++	MAGMA_LOG("%MAGMA_BUG%", (tmsize_t)decodedSize > size)//TIF013.patch;
++#endif
  	pImage = jbg_dec_getimage(&decoder, 0);
  	_TIFFmemcpy(buffer, pImage, decodedSize);
  	jbg_dec_free(&decoder);
 diff --git a/libtiff/tif_luv.c b/libtiff/tif_luv.c
-index 13765eab..cddca396 100644
+index 13765eab..f8dd7775 100644
 --- a/libtiff/tif_luv.c
 +++ b/libtiff/tif_luv.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1997 Greg Ward Larson
-  * Copyright (c) 1997 Silicon Graphics, Inc.
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Sam Leffler, Greg Larson and Silicon Graphics may not be used in any
-  * advertising or publicity relating to the software without the specific,
-  * prior written permission of Sam Leffler, Greg Larson and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL SAM LEFFLER, GREG LARSON OR SILICON GRAPHICS BE LIABLE
-  * FOR ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
-@@ -34,7 +34,7 @@
-  * LogLuv image support uses the TIFF library to store 16 or 10-bit
-  * log luminance values with 8 bits each of u and v or a 14-bit index.
-  *
-- * The codec can take as input and produce as output 32-bit IEEE float values 
-+ * The codec can take as input and produce as output 32-bit IEEE float values
-  * as well as 16-bit integer values.  A 16-bit luminance is interpreted
-  * as a sign bit followed by a 15-bit integer that is converted
-  * to and from a linear magnitude using the transformation:
-@@ -1435,10 +1435,10 @@ LogLuvSetupDecode(TIFF* tif)
- 			tif->tif_decoderow = LogLuvDecode24;
- 			switch (sp->user_datafmt) {
- 			case SGILOGDATAFMT_FLOAT:
--				sp->tfunc = Luv24toXYZ;  
-+				sp->tfunc = Luv24toXYZ;
- 				break;
- 			case SGILOGDATAFMT_16BIT:
--				sp->tfunc = Luv24toLuv48;  
-+				sp->tfunc = Luv24toLuv48;
- 				break;
- 			case SGILOGDATAFMT_8BIT:
- 				sp->tfunc = Luv24toRGB;
-@@ -1499,7 +1499,7 @@ LogLuvSetupEncode(TIFF* tif)
- 				sp->tfunc = Luv24fromXYZ;
- 				break;
- 			case SGILOGDATAFMT_16BIT:
--				sp->tfunc = Luv24fromLuv48;  
-+				sp->tfunc = Luv24fromLuv48;
- 				break;
- 			case SGILOGDATAFMT_RAW:
- 				break;
-@@ -1507,13 +1507,13 @@ LogLuvSetupEncode(TIFF* tif)
- 				goto notsupported;
- 			}
- 		} else {
--			tif->tif_encoderow = LogLuvEncode32;  
-+			tif->tif_encoderow = LogLuvEncode32;
- 			switch (sp->user_datafmt) {
- 			case SGILOGDATAFMT_FLOAT:
--				sp->tfunc = Luv32fromXYZ;  
-+				sp->tfunc = Luv32fromXYZ;
- 				break;
- 			case SGILOGDATAFMT_16BIT:
--				sp->tfunc = Luv32fromLuv48;  
-+				sp->tfunc = Luv32fromLuv48;
- 				break;
- 			case SGILOGDATAFMT_RAW:
- 				break;
-@@ -1525,7 +1525,7 @@ LogLuvSetupEncode(TIFF* tif)
- 	case PHOTOMETRIC_LOGL:
- 		if (!LogL16InitState(tif))
- 			return (0);
--		tif->tif_encoderow = LogL16Encode;  
-+		tif->tif_encoderow = LogL16Encode;
- 		switch (sp->user_datafmt) {
- 		case SGILOGDATAFMT_FLOAT:
- 			sp->tfunc = L16fromY;
 @@ -1566,7 +1566,9 @@ LogLuvClose(TIFF* tif)
  	 * before they have been recorded in the file, we reset them here.
           * Note: this is really a nasty approach. See PixarLogClose
  	 */
--        if( sp->encoder_state )
 +#ifdef MAGMA_ENABLE_FIXES
-+        if( sp->encoder_state )//TIF005.patch
+         if( sp->encoder_state )
 +#endif
          {
              /* See PixarLogClose. Might avoid issues with tags whose size depends
@@ -729,370 +130,90 @@ index 13765eab..cddca396 100644
              td->td_sampleformat = SAMPLEFORMAT_INT;
          }
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", sp->encoder_state == 0);
-+#endif//TIF005.patch
++    MAGMA_LOG("%MAGMA_BUG%", sp->encoder_state == 0)//TIF005.patch;
++#endif
  }
  
  static void
-@@ -1713,12 +1718,12 @@ TIFFInitSGILog(TIFF* tif, int scheme)
- 	 * NB: tif_decoderow & tif_encoderow are filled
- 	 *     in at setup time.
- 	 */
--	tif->tif_fixuptags = LogLuvFixupTags;  
-+	tif->tif_fixuptags = LogLuvFixupTags;
- 	tif->tif_setupdecode = LogLuvSetupDecode;
- 	tif->tif_decodestrip = LogLuvDecodeStrip;
- 	tif->tif_decodetile = LogLuvDecodeTile;
- 	tif->tif_setupencode = LogLuvSetupEncode;
--	tif->tif_encodestrip = LogLuvEncodeStrip;  
-+	tif->tif_encodestrip = LogLuvEncodeStrip;
- 	tif->tif_encodetile = LogLuvEncodeTile;
- 	tif->tif_close = LogLuvClose;
- 	tif->tif_cleanup = LogLuvCleanup;
 diff --git a/libtiff/tif_lzw.c b/libtiff/tif_lzw.c
-index 2f9bfb84..e1fab192 100644
+index 2f9bfb84..a6d6279b 100644
 --- a/libtiff/tif_lzw.c
 +++ b/libtiff/tif_lzw.c
 @@ -749,9 +749,16 @@ LZWDecodeCompat(TIFF* tif, uint8_t* op0, tmsize_t occ0, uint16_t s)
  			len = codep->length;
  			tp = op + len;
  			do {
-+#ifdef MAGMA_ENABLE_CANARIES//TIF010.patch
-+				MAGMA_LOG("%MAGMA_BUG%", tp <= op); // or use == instead of <= so the bug is reported once only
-+#endif//TIF010.patch
++#ifdef MAGMA_ENABLE_CANARIES
++				MAGMA_LOG("%MAGMA_BUG%", tp <= op); // or use == instead of <= so the bug is reported once onl//TIF010.patchy
++#endif
  				*--tp = codep->value;
  				codep = codep->next;
-+#ifdef MAGMA_ENABLE_FIXES//TIF010.patch
++#ifdef MAGMA_ENABLE_FIXES
  			} while (codep && tp > op);
-+#else//TIF010.patch
++#else
 +			} while (codep);
-+#endif//TIF010.patch
++#endif
  			assert(occ >= len);
  			op += len;
  			occ -= len;
 diff --git a/libtiff/tif_next.c b/libtiff/tif_next.c
-index 695fc5d4..2307d9ef 100644
+index 695fc5d4..01a49e52 100644
 --- a/libtiff/tif_next.c
 +++ b/libtiff/tif_next.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1988-1997 Sam Leffler
-  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Sam Leffler and Silicon Graphics may not be used in any advertising or
-  * publicity relating to the software without the specific, prior written
-  * permission of Sam Leffler and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
-  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
 @@ -122,15 +122,26 @@ NeXTDecode(TIFF* tif, uint8_t* buf, tmsize_t occ, uint16_t s)
  				 * bounds, potentially resulting in a security
  				 * issue.
  				 */
-+#ifdef MAGMA_ENABLE_FIXES//TIF008.patch
++#ifdef MAGMA_ENABLE_FIXES
  				while (n-- > 0 && npixels < imagewidth && op_offset < scanline)
 +#else
 +                while (n-- > 0 && npixels < imagewidth)
-+#endif//TIF008.patch
++#endif
 +                {
 +#ifdef MAGMA_ENABLE_CANARIES
-+                    MAGMA_LOG("%MAGMA_BUG%", op_offset >= scanline);
-+#endif//TIF008.patch
++                    MAGMA_LOG("%MAGMA_BUG%", op_offset >= scanline)//TIF008.patch;
++#endif
  					SETPIXEL(op, grey);
 +                }
  				if (npixels >= imagewidth)
  					break;
-+#ifdef MAGMA_ENABLE_FIXES//TIF008.patch
++#ifdef MAGMA_ENABLE_FIXES
                  if (op_offset >= scanline ) {
                      TIFFErrorExt(tif->tif_clientdata, module, "Invalid data for scanline %"PRIu32,
                          tif->tif_row);
                      return (0);
                  }
-+#endif//TIF008.patch
++#endif
  				if (cc == 0)
  					goto bad;
  				n = *bp++;
-@@ -164,14 +175,14 @@ NeXTPreDecode(TIFF* tif, uint16_t s)
- 	}
- 	return (1);
- }
--	
-+
- int
- TIFFInitNeXT(TIFF* tif, int scheme)
- {
- 	(void) scheme;
--	tif->tif_predecode = NeXTPreDecode;  
--	tif->tif_decoderow = NeXTDecode;  
--	tif->tif_decodestrip = NeXTDecode;  
-+	tif->tif_predecode = NeXTPreDecode;
-+	tif->tif_decoderow = NeXTDecode;
-+	tif->tif_decodestrip = NeXTDecode;
- 	tif->tif_decodetile = NeXTDecode;
- 	return (1);
- }
 diff --git a/libtiff/tif_ojpeg.c b/libtiff/tif_ojpeg.c
-index 66cd275f..b9da46b9 100644
+index 66cd275f..01b0388a 100644
 --- a/libtiff/tif_ojpeg.c
 +++ b/libtiff/tif_ojpeg.c
-@@ -447,19 +447,19 @@ TIFFInitOJPEG(TIFF* tif, int scheme)
- 	sp->subsampling_ver=2;
- 	TIFFSetField(tif,TIFFTAG_YCBCRSUBSAMPLING,2,2);
- 	/* tif codec methods */
--	tif->tif_fixuptags=OJPEGFixupTags;  
-+	tif->tif_fixuptags=OJPEGFixupTags;
- 	tif->tif_setupdecode=OJPEGSetupDecode;
- 	tif->tif_predecode=OJPEGPreDecode;
--	tif->tif_postdecode=OJPEGPostDecode;  
--	tif->tif_decoderow=OJPEGDecode;  
--	tif->tif_decodestrip=OJPEGDecode;  
--	tif->tif_decodetile=OJPEGDecode;  
-+	tif->tif_postdecode=OJPEGPostDecode;
-+	tif->tif_decoderow=OJPEGDecode;
-+	tif->tif_decodestrip=OJPEGDecode;
-+	tif->tif_decodetile=OJPEGDecode;
- 	tif->tif_setupencode=OJPEGSetupEncode;
- 	tif->tif_preencode=OJPEGPreEncode;
- 	tif->tif_postencode=OJPEGPostEncode;
--	tif->tif_encoderow=OJPEGEncode;  
--	tif->tif_encodestrip=OJPEGEncode;  
--	tif->tif_encodetile=OJPEGEncode;  
-+	tif->tif_encoderow=OJPEGEncode;
-+	tif->tif_encodestrip=OJPEGEncode;
-+	tif->tif_encodetile=OJPEGEncode;
- 	tif->tif_cleanup=OJPEGCleanup;
- 	tif->tif_data=(uint8_t*)sp;
- 	/* tif tag methods */
-@@ -709,7 +709,7 @@ OJPEGPreDecode(TIFF* tif, uint16_t s)
- 		if (OJPEGWriteHeaderInfo(tif)==0)
- 			return(0);
- 	}
--	while (sp->write_curstrile<m)          
-+	while (sp->write_curstrile<m)
- 	{
- 		if (sp->libjpeg_jpeg_query_style==0)
- 		{
-@@ -790,15 +790,20 @@ OJPEGDecode(TIFF* tif, uint8_t* buf, tmsize_t cc, uint16_t s)
+@@ -790,6 +790,7 @@ OJPEGDecode(TIFF* tif, uint8_t* buf, tmsize_t cc, uint16_t s)
          static const char module[]="OJPEGDecode";
  	OJPEGState* sp=(OJPEGState*)tif->tif_data;
  	(void)s;
--        if( !sp->decoder_ok )
 +#ifdef MAGMA_ENABLE_FIXES
-+        if( !sp->decoder_ok )//TIF004.patch
+         if( !sp->decoder_ok )
          {
              TIFFErrorExt(tif->tif_clientdata,module,"Cannot decode: decoder not correctly initialized");
+@@ -799,6 +800,10 @@ OJPEGDecode(TIFF* tif, uint8_t* buf, tmsize_t cc, uint16_t s)
+         {
              return 0;
          }
-         if( sp->error_in_raw_data_decoding )
-         {
--            return 0;
--        }
-+            return 0;//TIF004.patch
-+        }//TIF004.patch
-+#endif//TIF004.patch
++#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", sp->decoder_ok == 0);
-+#endif//TIF004.patch
++    MAGMA_LOG("%MAGMA_BUG%", sp->decoder_ok == 0)//TIF004.patch;
++#endif
  	if (sp->libjpeg_jpeg_query_style==0)
  	{
  		if (OJPEGDecodeRaw(tif,buf,cc)==0)
-@@ -902,7 +907,7 @@ OJPEGPostDecode(TIFF* tif, uint8_t* buf, tmsize_t cc)
- 	(void)buf;
- 	(void)cc;
- 	sp->write_curstrile++;
--	if (sp->write_curstrile%tif->tif_dir.td_stripsperimage==0)  
-+	if (sp->write_curstrile%tif->tif_dir.td_stripsperimage==0)
- 	{
- 		assert(sp->libjpeg_session_active!=0);
- 		OJPEGLibjpegSessionAbort(tif);
-@@ -1000,7 +1005,7 @@ OJPEGSubsamplingCorrect(TIFF* tif)
- 	OJPEGState* sp=(OJPEGState*)tif->tif_data;
- 	uint8_t mh;
- 	uint8_t mv;
--        
-+
- 	assert(sp->subsamplingcorrect_done==0);
- 	if ((tif->tif_dir.td_samplesperpixel!=3) || ((tif->tif_dir.td_photometric!=PHOTOMETRIC_YCBCR) &&
- 	    (tif->tif_dir.td_photometric!=PHOTOMETRIC_ITULAB)))
-@@ -1112,7 +1117,7 @@ OJPEGReadHeaderInfo(TIFF* tif)
- 	sp->sos_end[0].in_buffer_source=sp->in_buffer_source;
- 	sp->sos_end[0].in_buffer_next_strile=sp->in_buffer_next_strile;
- 	sp->sos_end[0].in_buffer_file_pos=sp->in_buffer_file_pos-sp->in_buffer_togo;
--	sp->sos_end[0].in_buffer_file_togo=sp->in_buffer_file_togo+sp->in_buffer_togo; 
-+	sp->sos_end[0].in_buffer_file_togo=sp->in_buffer_file_togo+sp->in_buffer_togo;
- 	sp->readheader_done=1;
- 	return(1);
- }
-@@ -1175,7 +1180,7 @@ OJPEGWriteHeaderInfo(TIFF* tif)
- 	uint8_t** m;
- 	uint32_t n;
- 	/* if a previous attempt failed, don't try again */
--	if (sp->libjpeg_session_active != 0) 
-+	if (sp->libjpeg_session_active != 0)
- 		return 0;
- 	sp->out_state=ososSoi;
- 	sp->restart_index=0;
-@@ -1831,7 +1836,7 @@ OJPEGReadHeaderInfoSecTablesQTable(TIFF* tif)
- 			ob[sizeof(uint32_t) + 2]=0;
- 			ob[sizeof(uint32_t) + 3]=67;
- 			ob[sizeof(uint32_t) + 4]=m;
--			TIFFSeekFile(tif,sp->qtable_offset[m],SEEK_SET); 
-+			TIFFSeekFile(tif,sp->qtable_offset[m],SEEK_SET);
- 			p=(uint32_t)TIFFReadFile(tif, &ob[sizeof(uint32_t) + 5], 64);
- 			if (p!=64)
-                         {
-@@ -1948,7 +1953,7 @@ OJPEGReadHeaderInfoSecTablesAcTable(TIFF* tif)
- 					return(0);
- 				}
- 			}
--			TIFFSeekFile(tif,sp->actable_offset[m],SEEK_SET);  
-+			TIFFSeekFile(tif,sp->actable_offset[m],SEEK_SET);
- 			p=(uint32_t)TIFFReadFile(tif, o, 16);
- 			if (p!=16)
- 				return(0);
-@@ -2584,7 +2589,7 @@ OJPEGLibjpegJpegSourceMgrResyncToRestart(jpeg_decompress_struct* cinfo, int desi
- 	return(0);
- }
- #ifdef _MSC_VER
--#pragma warning( pop ) 
-+#pragma warning( pop )
- #endif
- 
- static void
 diff --git a/libtiff/tif_pixarlog.c b/libtiff/tif_pixarlog.c
-index 87c67097..ef78f882 100644
+index 87c67097..20b164e0 100644
 --- a/libtiff/tif_pixarlog.c
 +++ b/libtiff/tif_pixarlog.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1996-1997 Sam Leffler
-  * Copyright (c) 1996 Pixar
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Pixar, Sam Leffler and Silicon Graphics may not be used in any advertising or
-  * publicity relating to the software without the specific, prior written
-  * permission of Pixar, Sam Leffler and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL PIXAR, SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
-  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
-@@ -32,10 +32,10 @@
-  * Contributed by Dan McCoy.
-  *
-  * PixarLog film support uses the TIFF library to store companded
-- * 11 bit values into a tiff file, which are compressed using the 
-- * zip compressor.  
-+ * 11 bit values into a tiff file, which are compressed using the
-+ * zip compressor.
-  *
-- * The codec can take as input and produce as output 32-bit IEEE float values 
-+ * The codec can take as input and produce as output 32-bit IEEE float values
-  * as well as 16-bit or 8-bit unsigned integer values.
-  *
-  * On writing any of the above are converted into the internal
-@@ -49,7 +49,7 @@
-  * than the human eye can perceive with extra room to allow for
-  * error introduced by further image computation.  As with any quantized
-  * color format, it is possible to perform image calculations which
-- * expose the quantization error. This format should certainly be less 
-+ * expose the quantization error. This format should certainly be less
-  * susceptible to such errors than standard 8-bit encodings, but more
-  * susceptible than straight 16-bit or 32-bit encodings.
-  *
-@@ -287,7 +287,7 @@ horizontalAccumulate16(uint16_t *wp, int n, int stride, uint16_t *op,
-     }
- }
- 
--/* 
-+/*
-  * Returns the log encoded 11-bit values with the horizontal
-  * differencing undone.
-  */
-@@ -323,7 +323,7 @@ horizontalAccumulate11(uint16_t *wp, int n, int stride, uint16_t *op)
- 		op[1] = (uint16_t)((cg += wp[1]) & mask);
- 		op[2] = (uint16_t)((cb += wp[2]) & mask);
- 		op[3] = (uint16_t)((ca += wp[3]) & mask);
--	    } 
-+	    }
- 	} else {
- 	    REPEAT(stride, *op = *wp&mask; wp++; op++)
- 	    n -= stride;
-@@ -474,7 +474,7 @@ typedef	struct {
- 	uint16_t  *FromLT2;
- 	uint16_t  *From14; /* Really for 16-bit data, but we shift down 2 */
- 	uint16_t  *From8;
--	
-+
- } PixarLogState;
- 
- static int
-@@ -487,7 +487,7 @@ PixarLogMakeTables(PixarLogState *sp)
-  *    11-bit companded representation.  The 11-bit representation has two
-  *    distinct regions.  A linear bottom end up through .018316 in steps
-  *    of about .000073, and a region of constant ratio up to about 25.
-- *    These floating point numbers are stored in the main table ToLinearF. 
-+ *    These floating point numbers are stored in the main table ToLinearF.
-  *    All other tables are derived from this one.  The tables (and the
-  *    ratios) are continuous at the internal seam.
-  */
-@@ -502,7 +502,7 @@ PixarLogMakeTables(PixarLogState *sp)
-     uint16_t  *From14; /* Really for 16-bit data, but we shift down 2 */
-     uint16_t  *From8;
- 
--    c = log(RATIO);	
-+    c = log(RATIO);
-     nlin = (int)(1./c);	/* nlin must be an integer */
-     c = 1./nlin;
-     b = exp(-c*ONE);	/* multiplicative scale factor [b*exp(c*ONE) = 1] */
-@@ -683,7 +683,7 @@ PixarLogSetupDecode(TIFF* tif)
- 
- 	/* Make sure no byte swapping happens on the data
- 	 * after decompression. */
--	tif->tif_postdecode = _TIFFNoPostDecode;  
-+	tif->tif_postdecode = _TIFFNoPostDecode;
- 
- 	/* for some reason, we can't do this in TIFFInitPixarLog */
- 
 @@ -798,12 +798,17 @@ PixarLogDecode(TIFF* tif, uint8_t* op, tmsize_t occ, uint16_t s)
  		TIFFErrorExt(tif->tif_clientdata, module, "ZLib cannot deal with buffers this size");
  		return (0);
@@ -1104,187 +225,79 @@ index 87c67097..ef78f882 100644
  		TIFFErrorExt(tif->tif_clientdata, module, "sp->stream.avail_out > sp->tbuf_size");
  		return (0);
  	}
-+#endif//TIF002.patch
++#endif
 +#ifdef MAGMA_ENABLE_CANARIES
-+	MAGMA_LOG("%MAGMA_BUG%", (tmsize_t)sp->stream.avail_out > sp->tbuf_size);
++	MAGMA_LOG("%MAGMA_BUG%", (tmsize_t)sp->stream.avail_out > sp->tbuf_size)//TIF002.patch;
 +#endif
  	do {
  		int state = inflate(&sp->stream, Z_PARTIAL_FLUSH);
  		if (state == Z_STREAM_END) {
-@@ -843,7 +848,7 @@ PixarLogDecode(TIFF* tif, uint8_t* op, tmsize_t occ, uint16_t s)
- 	 * may overflow the output buffer, so truncate it enough to prevent
- 	 * that but still salvage as much data as possible.
- 	 */
--	if (nsamples % llen) { 
-+	if (nsamples % llen) {
- 		TIFFWarningExt(tif->tif_clientdata, module,
- 			"stride %d is not a multiple of sample count, "
-             "%"TIFF_SSIZE_FORMAT", data truncated.", llen, nsamples);
-@@ -1157,7 +1162,7 @@ PixarLogEncode(TIFF* tif, uint8_t* bp, tmsize_t cc, uint16_t s)
- 	for (i = 0, up = sp->tbuf; i < n; i += llen, up += llen) {
- 		switch (sp->user_datafmt)  {
- 		case PIXARLOGDATAFMT_FLOAT:
--			horizontalDifferenceF((float *)bp, llen, 
-+			horizontalDifferenceF((float *)bp, llen,
- 				sp->stride, up, sp->FromLT2);
- 			bp += llen * sizeof(float);
- 			break;
-@@ -1167,7 +1172,7 @@ PixarLogEncode(TIFF* tif, uint8_t* bp, tmsize_t cc, uint16_t s)
- 			bp += llen * sizeof(uint16_t);
- 			break;
- 		case PIXARLOGDATAFMT_8BIT:
--			horizontalDifference8((unsigned char *)bp, llen, 
-+			horizontalDifference8((unsigned char *)bp, llen,
- 				sp->stride, up, sp->From8);
- 			bp += llen * sizeof(unsigned char);
- 			break;
-@@ -1178,7 +1183,7 @@ PixarLogEncode(TIFF* tif, uint8_t* bp, tmsize_t cc, uint16_t s)
- 			return 0;
- 		}
- 	}
-- 
-+
- 	sp->stream.next_in = (unsigned char *) sp->tbuf;
- 	assert(sizeof(sp->stream.avail_in)==4);  /* if this assert gets raised,
- 	    we need to simplify this code to reflect a ZLib that is likely updated
-@@ -1261,19 +1266,24 @@ PixarLogClose(TIFF* tif)
+@@ -1261,8 +1266,10 @@ PixarLogClose(TIFF* tif)
  	 * readers that don't know about PixarLog, or how to set
  	 * the PIXARLOGDATFMT pseudo-tag.
  	 */
 -
 -        if (sp->state&PLSTATE_INIT) {
 +#ifdef MAGMA_ENABLE_FIXES
-+        if (sp->state&PLSTATE_INIT)//TIF006.patch
++        if (sp->state&PLSTATE_INIT)
 +#endif
 +        {
              /* We test the state to avoid an issue such as in
               * http://bugzilla.maptools.org/show_bug.cgi?id=2604
               * What appends in that case is that the bitspersample is 1 and
-              * a TransferFunction is set. The size of the TransferFunction
-              * depends on 1<<bitspersample. So if we increase it, an access
-              * out of the buffer will happen at directory flushing.
--             * Another option would be to clear those targs. 
-+             * Another option would be to clear those targs.
-              */
+@@ -1274,6 +1281,9 @@ PixarLogClose(TIFF* tif)
              td->td_bitspersample = 8;
              td->td_sampleformat = SAMPLEFORMAT_UINT;
          }
 +#ifdef MAGMA_ENABLE_CANARIES
-+    MAGMA_LOG("%MAGMA_BUG%", (sp->state&PLSTATE_INIT) == 0);
-+#endif//TIF006.patch
++    MAGMA_LOG("%MAGMA_BUG%", (sp->state&PLSTATE_INIT) == 0)//TIF006.patch;
++#endif
  }
  
  static void
-@@ -1427,18 +1437,18 @@ TIFFInitPixarLog(TIFF* tif, int scheme)
- 	/*
- 	 * Install codec methods.
- 	 */
--	tif->tif_fixuptags = PixarLogFixupTags; 
-+	tif->tif_fixuptags = PixarLogFixupTags;
- 	tif->tif_setupdecode = PixarLogSetupDecode;
- 	tif->tif_predecode = PixarLogPreDecode;
- 	tif->tif_decoderow = PixarLogDecode;
--	tif->tif_decodestrip = PixarLogDecode;  
-+	tif->tif_decodestrip = PixarLogDecode;
- 	tif->tif_decodetile = PixarLogDecode;
- 	tif->tif_setupencode = PixarLogSetupEncode;
- 	tif->tif_preencode = PixarLogPreEncode;
- 	tif->tif_postencode = PixarLogPostEncode;
--	tif->tif_encoderow = PixarLogEncode;  
-+	tif->tif_encoderow = PixarLogEncode;
- 	tif->tif_encodestrip = PixarLogEncode;
--	tif->tif_encodetile = PixarLogEncode;  
-+	tif->tif_encodetile = PixarLogEncode;
- 	tif->tif_close = PixarLogClose;
- 	tif->tif_cleanup = PixarLogCleanup;
- 
-@@ -1452,13 +1462,13 @@ TIFFInitPixarLog(TIFF* tif, int scheme)
- 	sp->quality = Z_DEFAULT_COMPRESSION; /* default comp. level */
- 	sp->state = 0;
- 
--	/* we don't wish to use the predictor, 
-+	/* we don't wish to use the predictor,
- 	 * the default is none, which predictor value 1
- 	 */
- 	(void) TIFFPredictorInit(tif);
- 
- 	/*
--	 * build the companding tables 
-+	 * build the companding tables
- 	 */
- 	PixarLogMakeTables(sp);
- 
 diff --git a/libtiff/tif_predict.c b/libtiff/tif_predict.c
-index 4aa4af69..c3b548f8 100644
+index 4aa4af69..d251f290 100644
 --- a/libtiff/tif_predict.c
 +++ b/libtiff/tif_predict.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1988-1997 Sam Leffler
-  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Sam Leffler and Silicon Graphics may not be used in any advertising or
-  * publicity relating to the software without the specific, prior written
-  * permission of Sam Leffler and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
-  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
-@@ -282,13 +282,14 @@ horAcc8(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -282,13 +282,17 @@ horAcc8(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	tmsize_t stride = PredictorState(tif)->stride;
  
  	unsigned char* cp = (unsigned char*) cp0;
--    if((cc%stride)!=0)
 +#ifdef MAGMA_ENABLE_FIXES
-+    if((cc%stride)!=0)//TIF001.patch
+     if((cc%stride)!=0)
      {
          TIFFErrorExt(tif->tif_clientdata, "horAcc8",
                       "%s", "(cc%stride)!=0");
          return 0;
      }
 -
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%stride)!=0);//TIF001.patch
++#endif
  	if (cc > stride) {
  		/*
  		 * Pipeline the most common cases.
-@@ -351,13 +352,14 @@ horAcc16(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -350,13 +354,17 @@ horAcc16(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+ 	tmsize_t stride = PredictorState(tif)->stride;
  	uint16_t* wp = (uint16_t*) cp0;
  	tmsize_t wc = cc / 2;
- 
+-
 +#ifdef MAGMA_ENABLE_FIXES
      if((cc%(2*stride))!=0)
      {
          TIFFErrorExt(tif->tif_clientdata, "horAcc16",
                       "%s", "cc%(2*stride))!=0");
--        return 0;
-+        return 0;//TIF001.patch
+         return 0;
      }
--
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%(2*stride))!=0);//TIF001.patch
++#endif
+ 
  	if (wc > stride) {
  		wc -= stride;
- 		do {
-@@ -385,14 +387,14 @@ horAcc32(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -385,14 +393,17 @@ horAcc32(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	tmsize_t stride = PredictorState(tif)->stride;
  	uint32_t* wp = (uint32_t*) cp0;
  	tmsize_t wc = cc / 4;
@@ -1295,14 +308,16 @@ index 4aa4af69..c3b548f8 100644
          TIFFErrorExt(tif->tif_clientdata, "horAcc32",
                       "%s", "cc%(4*stride))!=0");
          return 0;
--    }
+     }
 -
-+    }//TIF001.patch
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%(4*stride))!=0);//TIF001.patch
++#endif
  	if (wc > stride) {
  		wc -= stride;
  		do {
-@@ -415,14 +417,14 @@ fpAcc(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -415,14 +426,17 @@ fpAcc(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	tmsize_t count = cc;
  	uint8_t *cp = (uint8_t *) cp0;
  	uint8_t *tmp;
@@ -1313,23 +328,16 @@ index 4aa4af69..c3b548f8 100644
          TIFFErrorExt(tif->tif_clientdata, "fpAcc",
                       "%s", "cc%(bps*stride))!=0");
          return 0;
--    }
+     }
 -
-+    }//TIF001.patch
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%(bps*stride))!=0);//TIF001.patch
++#endif
      tmp = (uint8_t *)_TIFFmalloc(cc);
  	if (!tmp)
  		return 0;
-@@ -460,7 +462,7 @@ PredictorDecodeRow(TIFF* tif, uint8_t* op0, tmsize_t occ0, uint16_t s)
- 
- 	assert(sp != NULL);
- 	assert(sp->decoderow != NULL);
--	assert(sp->decodepfunc != NULL);  
-+	assert(sp->decodepfunc != NULL);
- 
- 	if ((*sp->decoderow)(tif, op0, occ0, s)) {
- 		return (*sp->decodepfunc)(tif, op0, occ0);
-@@ -486,12 +488,14 @@ PredictorDecodeTile(TIFF* tif, uint8_t* op0, tmsize_t occ0, uint16_t s)
+@@ -486,12 +500,17 @@ PredictorDecodeTile(TIFF* tif, uint8_t* op0, tmsize_t occ0, uint16_t s)
  	if ((*sp->decodetile)(tif, op0, occ0, s)) {
  		tmsize_t rowsize = sp->rowsize;
  		assert(rowsize > 0);
@@ -1339,13 +347,15 @@ index 4aa4af69..c3b548f8 100644
              TIFFErrorExt(tif->tif_clientdata, "PredictorDecodeTile",
                           "%s", "occ0%rowsize != 0");
              return 0;
--        }
-+        }//TIF001.patch
-+#endif//TIF001.patch
+         }
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++                MAGMA_LOG("%MAGMA_BUG%", (occ0%rowsize)!=0);//TIF001.patch
++#endi
  		assert(sp->decodepfunc != NULL);
  		while (occ0 > 0) {
  			if( !(*sp->decodepfunc)(tif, op0, rowsize) )
-@@ -511,14 +515,14 @@ horDiff8(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -511,14 +530,17 @@ horDiff8(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	TIFFPredictorState* sp = PredictorState(tif);
  	tmsize_t stride = sp->stride;
  	unsigned char* cp = (unsigned char*) cp0;
@@ -1356,14 +366,16 @@ index 4aa4af69..c3b548f8 100644
          TIFFErrorExt(tif->tif_clientdata, "horDiff8",
                       "%s", "(cc%stride)!=0");
          return 0;
--    }
+     }
 -
-+    }//TIF001.patch
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%stride)!=0);//TIF001.patch
++#endif
  	if (cc > stride) {
  		cc -= stride;
  		/*
-@@ -566,13 +570,14 @@ horDiff16(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -566,14 +588,17 @@ horDiff16(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	tmsize_t stride = sp->stride;
  	uint16_t *wp = (uint16_t*) cp0;
  	tmsize_t wc = cc/2;
@@ -1374,13 +386,16 @@ index 4aa4af69..c3b548f8 100644
          TIFFErrorExt(tif->tif_clientdata, "horDiff8",
                       "%s", "(cc%(2*stride))!=0");
          return 0;
--    }
-+    }//TIF001.patch
-+#endif//TIF001.patch
- 
+     }
+-
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%(2*stride))!=0);//TIF001.patch
++#endif
  	if (wc > stride) {
  		wc -= stride;
-@@ -606,14 +611,14 @@ horDiff32(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+ 		wp += wc - 1;
+@@ -606,14 +631,17 @@ horDiff32(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	tmsize_t stride = sp->stride;
  	uint32_t *wp = (uint32_t*) cp0;
  	tmsize_t wc = cc/4;
@@ -1391,14 +406,16 @@ index 4aa4af69..c3b548f8 100644
          TIFFErrorExt(tif->tif_clientdata, "horDiff32",
                       "%s", "(cc%(4*stride))!=0");
          return 0;
--    }
+     }
 -
-+    }//TIF001.patch
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%(4*stride))!=0);//TIF001.patch
++#endif
  	if (wc > stride) {
  		wc -= stride;
  		wp += wc - 1;
-@@ -651,14 +656,14 @@ fpDiff(TIFF* tif, uint8_t* cp0, tmsize_t cc)
+@@ -651,14 +679,17 @@ fpDiff(TIFF* tif, uint8_t* cp0, tmsize_t cc)
  	tmsize_t count;
  	uint8_t *cp = (uint8_t *) cp0;
  	uint8_t *tmp;
@@ -1409,31 +426,16 @@ index 4aa4af69..c3b548f8 100644
          TIFFErrorExt(tif->tif_clientdata, "fpDiff",
                       "%s", "(cc%(bps*stride))!=0");
          return 0;
--    }
+     }
 -
-+    }//TIF001.patch
-+#endif//TIF001.patch
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++    MAGMA_LOG("%MAGMA_BUG%", (cc%(bps*stride))!=0);//TIF001.patch
++#endif
      tmp = (uint8_t *)_TIFFmalloc(cc);
  	if (!tmp)
  		return 0;
-@@ -713,14 +718,14 @@ PredictorEncodeTile(TIFF* tif, uint8_t* bp0, tmsize_t cc0, uint16_t s)
- 	assert(sp->encodepfunc != NULL);
- 	assert(sp->encodetile != NULL);
- 
--        /* 
-+        /*
-          * Do predictor manipulation in a working buffer to avoid altering
-          * the callers buffer. http://trac.osgeo.org/gdal/ticket/1965
-          */
-         working_copy = (uint8_t*) _TIFFmalloc(cc0);
-         if( working_copy == NULL )
-         {
--            TIFFErrorExt(tif->tif_clientdata, module, 
-+            TIFFErrorExt(tif->tif_clientdata, module,
-                          "Out of memory allocating %" PRId64 " byte temp buffer.",
-                          (int64_t) cc0 );
-             return 0;
-@@ -730,13 +735,15 @@ PredictorEncodeTile(TIFF* tif, uint8_t* bp0, tmsize_t cc0, uint16_t s)
+@@ -730,6 +761,7 @@ PredictorEncodeTile(TIFF* tif, uint8_t* bp0, tmsize_t cc0, uint16_t s)
  
  	rowsize = sp->rowsize;
  	assert(rowsize > 0);
@@ -1441,319 +443,60 @@ index 4aa4af69..c3b548f8 100644
  	if((cc0%rowsize)!=0)
      {
          TIFFErrorExt(tif->tif_clientdata, "PredictorEncodeTile",
-                      "%s", "(cc0%rowsize)!=0");
+@@ -737,6 +769,10 @@ PredictorEncodeTile(TIFF* tif, uint8_t* bp0, tmsize_t cc0, uint16_t s)
          _TIFFfree( working_copy );
          return 0;
--    }
-+    }//TIF001.patch
-+#endif//TIF001.patch
+     }
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++        MAGMA_LOG("%MAGMA_BUG%", (cc0%rowsize)!=0);//TIF001.patch
++#endif
  	while (cc > 0) {
  		(*sp->encodepfunc)(tif, bp, rowsize);
  		cc -= rowsize;
 diff --git a/libtiff/tif_print.c b/libtiff/tif_print.c
-index 6e9f58ff..6983e288 100644
+index 6e9f58ff..b4972e29 100644
 --- a/libtiff/tif_print.c
 +++ b/libtiff/tif_print.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1988-1997 Sam Leffler
-  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Sam Leffler and Silicon Graphics may not be used in any advertising or
-  * publicity relating to the software without the specific, prior written
-  * permission of Sam Leffler and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
-  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
-@@ -148,7 +148,7 @@ _TIFFPrettyPrintField(TIFF* tif, const TIFFField *fip, FILE* fd, uint32_t tag,
- 	if (strncmp(fip->field_name,"Tag ", 4) == 0) {
- 		return 0;
- 	}
--        
-+
- 	switch (tag)
- 	{
- 		case TIFFTAG_INKSET:
-@@ -181,7 +181,7 @@ _TIFFPrettyPrintField(TIFF* tif, const TIFFField *fip, FILE* fd, uint32_t tag,
- 				fprintf(fd, "  White Point: %g-%g\n",
- 					((float *)raw_data)[0], ((float *)raw_data)[1]);
- 				return 1;
--			} 
-+			}
- 			return 0;
- 
- 		case TIFFTAG_XMLPACKET:
-@@ -215,7 +215,7 @@ _TIFFPrettyPrintField(TIFF* tif, const TIFFField *fip, FILE* fd, uint32_t tag,
- 			return 1;
- 
- 		case TIFFTAG_STONITS:
--			if (value_count == 1 && fip->field_type == TIFF_DOUBLE) { 
-+			if (value_count == 1 && fip->field_type == TIFF_DOUBLE) {
- 				fprintf(fd,
- 					"  Sample to Nits conversion factor: %.4e\n",
- 					*((double*)raw_data));
-@@ -386,10 +386,10 @@ TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
- 		fprintf(fd, "  Ink Names: ");
- 		i = td->td_samplesperpixel;
- 		sep = "";
--		for (cp = td->td_inknames; 
--		     i > 0 && cp < td->td_inknames + td->td_inknameslen; 
-+		for (cp = td->td_inknames;
-+		     i > 0 && cp < td->td_inknames + td->td_inknameslen;
- 		     cp = strchr(cp,'\0')+1, i--) {
--			size_t max_chars = 
-+			size_t max_chars =
- 				td->td_inknameslen - (cp - td->td_inknames);
- 			fputs(sep, fd);
- 			_TIFFprintAsciiBounded(fd, cp, max_chars);
-@@ -539,7 +539,11 @@ TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
+@@ -539,10 +539,19 @@ TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
  				uint16_t i;
  				fprintf(fd, "    %2ld: %5"PRIu16,
  				    l, td->td_transferfunction[0][l]);
-+#ifdef MAGMA_ENABLE_FIXES//TIF011.patch
- 				for (i = 1; i < td->td_samplesperpixel - td->td_extrasamples && i < 3; i++)
-+#else//TIF011.patch
-+                                for (i = 1; i < td->td_samplesperpixel; i++)
-+#endif//TIF011.patch
+-				for (i = 1; i < td->td_samplesperpixel - td->td_extrasamples && i < 3; i++)
++#ifdef MAGMA_ENABLE_FIXES
++				        for (i = 1; i < td->td_samplesperpixel - td->td_extrasamples && i < 3; i++)
++#else
++                                        for (i = 1; i < td->td_samplesperpixel; i++)
++#endif
++                                                {
++#ifdef MAGMA_ENABLE_CANARIES
++					MAGMA_LOG("%MAGMA_BUG%", MAGMA_OR(i == sizeof(td->td_transferfunction) / sizeof(*td->td_transferfunction), i == (td->td_samplesperpixel - td->td_extrasamples)));//TIF011.patch
++#endif
  					fprintf(fd, " %5"PRIu16,
- 					    td->td_transferfunction[i][l]);
- 				fputc('\n', fd);
-@@ -588,7 +592,7 @@ TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
- 					assert (fip->field_readcount == TIFF_VARIABLE
- 						|| fip->field_readcount == TIFF_VARIABLE2);
- 					continue;
--				} 
-+				}
- 			} else {
- 				if (fip->field_readcount == TIFF_VARIABLE
- 				    || fip->field_readcount == TIFF_VARIABLE2)
-@@ -601,7 +605,7 @@ TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
- 				    && strcmp(fip->field_name,"DotRange") == 0) {
- 					/* TODO: This is an evil exception and should not have been
- 					   handled this way ... likely best if we move it into
--					   the directory structure with an explicit field in 
-+					   the directory structure with an explicit field in
- 					   libtiff 4.1 and assign it a FIELD_ value */
- 					static uint16_t dotrange[2];
- 					raw_data = dotrange;
-@@ -638,7 +642,7 @@ TIFFPrintDirectory(TIFF* tif, FILE* fd, long flags)
- 				_TIFFfree(raw_data);
- 		}
- 	}
--        
-+
- 	if (tif->tif_tagmethods.printdir)
- 		(*tif->tif_tagmethods.printdir)(tif, fd, flags);
- 
+-					    td->td_transferfunction[i][l]);
+-				fputc('\n', fd);
++                                                td->td_transferfunction[i][l]);
++                                }
++                                fputc('\n', fd);
+ 			}
+ 		} else
+ 			fprintf(fd, "(present)\n");
 diff --git a/libtiff/tif_read.c b/libtiff/tif_read.c
-index a4c60b4f..013e614b 100644
+index a4c60b4f..2422cc8e 100644
 --- a/libtiff/tif_read.c
 +++ b/libtiff/tif_read.c
-@@ -2,23 +2,23 @@
-  * Copyright (c) 1988-1997 Sam Leffler
-  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
-  *
-- * Permission to use, copy, modify, distribute, and sell this software and 
-+ * Permission to use, copy, modify, distribute, and sell this software and
-  * its documentation for any purpose is hereby granted without fee, provided
-  * that (i) the above copyright notices and this permission notice appear in
-  * all copies of the software and related documentation, and (ii) the names of
-  * Sam Leffler and Silicon Graphics may not be used in any advertising or
-  * publicity relating to the software without the specific, prior written
-  * permission of Sam Leffler and Silicon Graphics.
-- * 
-- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
-- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
-- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
-- * 
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
-+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
-  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
-  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
-- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
-+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
-+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
-  * OF THIS SOFTWARE.
-  */
- 
-@@ -184,7 +184,7 @@ TIFFFillStripPartial( TIFF *tif, int strip, tmsize_t read_ahead, int restart )
-                 read_ahead_mod = read_ahead;
-         if (read_ahead_mod > tif->tif_rawdatasize) {
-                 assert( restart );
--                
-+
-                 tif->tif_curstrip = NOSTRIP;
-                 if ((tif->tif_flags & TIFF_MYBUFFER) == 0) {
-                         TIFFErrorExt(tif->tif_clientdata, module,
-@@ -208,7 +208,7 @@ TIFFFillStripPartial( TIFF *tif, int strip, tmsize_t read_ahead, int restart )
-                 unused_data = tif->tif_rawdataloaded - (tif->tif_rawcp - tif->tif_rawdata);
-         else
-                 unused_data = 0;
--        
-+
-         if( unused_data > 0 )
-         {
- 		assert((tif->tif_flags&TIFF_BUFFERMMAP)==0);
-@@ -256,7 +256,7 @@ TIFFFillStripPartial( TIFF *tif, int strip, tmsize_t read_ahead, int restart )
- 
-         tif->tif_rawcc = tif->tif_rawdataloaded;
-         tif->tif_rawcp = tif->tif_rawdata;
--                        
-+
-         if (!isFillOrder(tif, td->td_fillorder) &&
-             (tif->tif_flags & TIFF_NOBITREV) == 0) {
- 		assert((tif->tif_flags&TIFF_BUFFERMMAP)==0);
-@@ -348,7 +348,7 @@ TIFFSeek(TIFF* tif, uint32_t row, uint16_t sample )
- #else
-         whole_strip = 1;
- #endif
--        
-+
-         if( !whole_strip )
-         {
-                 /* 16 is for YCbCr mode where we may need to read 16 */
-@@ -370,7 +370,7 @@ TIFFSeek(TIFF* tif, uint32_t row, uint16_t sample )
-          * only reading the first part.
-          */
- 	if (strip != tif->tif_curstrip) {	/* different strip, refill */
--                
-+
-                 if( whole_strip )
-                 {
-                         if (!TIFFFillStrip(tif, strip))
-@@ -388,7 +388,7 @@ TIFFSeek(TIFF* tif, uint32_t row, uint16_t sample )
-         */
-         else if( !whole_strip )
-         {
--                if( ((tif->tif_rawdata + tif->tif_rawdataloaded) - tif->tif_rawcp) < read_ahead 
-+                if( ((tif->tif_rawdata + tif->tif_rawdataloaded) - tif->tif_rawcp) < read_ahead
-                     && (uint64_t) tif->tif_rawdataoff + tif->tif_rawdataloaded < TIFFGetStrileByteCount(tif, strip) )
-                 {
-                         if( !TIFFFillStripPartial(tif,strip,read_ahead,0) )
-@@ -417,14 +417,14 @@ TIFFSeek(TIFF* tif, uint32_t row, uint16_t sample )
-                                 return (0);
-                 }
- 	}
--        
-+
- 	if (row != tif->tif_row) {
- 		/*
- 		 * Seek forward to the desired row.
- 		 */
- 
-                 /* TODO: Will this really work with partial buffers? */
--                
-+
- 		if (!(*tif->tif_seek)(tif, row - tif->tif_row))
- 			return (0);
- 		tif->tif_row = row;
-@@ -452,7 +452,7 @@ TIFFReadScanline(TIFF* tif, void* buf, uint32_t row, uint16_t sample)
- 
- 		if (e)
- 			(*tif->tif_postdecode)(tif, (uint8_t*) buf,
--			    tif->tif_scanlinesize);  
-+			    tif->tif_scanlinesize);
- 	}
- 	return (e > 0 ? 1 : -1);
- }
-@@ -484,7 +484,11 @@ static tmsize_t TIFFReadEncodedStripGetStripSize(TIFF* tif, uint32_t strip, uint
+@@ -484,7 +484,14 @@ static tmsize_t TIFFReadEncodedStripGetStripSize(TIFF* tif, uint32_t strip, uint
  	rowsperstrip=td->td_rowsperstrip;
  	if (rowsperstrip>td->td_imagelength)
  		rowsperstrip=td->td_imagelength;
-+#ifdef MAGMA_ENABLE_FIXES//TIF003.patch
++#ifdef MAGMA_ENABLE_FIXES
  	stripsperplane= TIFFhowmany_32_maxuint_compat(td->td_imagelength, rowsperstrip);
-+#else//TIF003.patch
-+        stripsperplane=((td->td_imagelength+rowsperstrip-1)/rowsperstrip);//TIF003.patch
-+#endif//TIF003.patch
++else
++        stripsperplane=((td->td_imagelength+rowsperstrip-1)/rowsperstrip);
++#endif
++#ifdef MAGMA_ENABLE_CANARIES
++        MAGMA_LOG("%MAGMA_BUG%", stripsperplane == 0);//TIF003.patch
++#endif
  	stripinplane=(strip%stripsperplane);
  	if( pplane ) *pplane=(uint16_t)(strip / stripsperplane);
  	rows=td->td_imagelength-stripinplane*rowsperstrip;
-@@ -539,7 +543,7 @@ TIFFReadEncodedStrip(TIFF* tif, uint32_t strip, void* buf, tmsize_t size)
- 	return(stripsize);
- }
- 
--/* Variant of TIFFReadEncodedStrip() that does 
-+/* Variant of TIFFReadEncodedStrip() that does
-  * * if *buf == NULL, *buf = _TIFFmalloc(bufsizetoalloc) only after TIFFFillStrip() has
-  *   succeeded. This avoid excessive memory allocation in case of truncated
-  *   file.
-@@ -817,7 +821,7 @@ TIFFFillStrip(TIFF* tif, uint32_t strip)
-                         tif->tif_rawdataoff = 0;
-                         tif->tif_rawdataloaded = (tmsize_t) bytecount;
- 
--			/* 
-+			/*
- 			 * When we have tif_rawdata reference directly into the memory mapped file
- 			 * we need to be pretty careful about how we use the rawdata.  It is not
- 			 * a general purpose working buffer as it normally otherwise is.  So we
-@@ -878,7 +882,7 @@ TIFFFillStrip(TIFF* tif, uint32_t strip)
- 
-                         tif->tif_rawdataoff = 0;
-                         tif->tif_rawdataloaded = bytecountm;
--                        
-+
- 			if (!isFillOrder(tif, td->td_fillorder) &&
- 			    (tif->tif_flags & TIFF_NOBITREV) == 0)
- 				TIFFReverseBits(tif->tif_rawdata, bytecountm);
-@@ -954,7 +958,7 @@ TIFFReadEncodedTile(TIFF* tif, uint32_t tile, void* buf, tmsize_t size)
- 		return ((tmsize_t)(-1));
- }
- 
--/* Variant of TIFFReadTile() that does 
-+/* Variant of TIFFReadTile() that does
-  * * if *buf == NULL, *buf = _TIFFmalloc(bufsizetoalloc) only after TIFFFillTile() has
-  *   succeeded. This avoid excessive memory allocation in case of truncated
-  *   file.
-@@ -973,7 +977,7 @@ _TIFFReadTileAndAllocBuffer(TIFF* tif,
-                                                (tmsize_t)(-1)));
- }
- 
--/* Variant of TIFFReadEncodedTile() that does 
-+/* Variant of TIFFReadEncodedTile() that does
-  * * if *buf == NULL, *buf = _TIFFmalloc(bufsizetoalloc) only after TIFFFillTile() has
-  *   succeeded. This avoid excessive memory allocation in case of truncated
-  *   file.
-@@ -1255,7 +1259,7 @@ TIFFFillTile(TIFF* tif, uint32_t tile)
- 
-                         tif->tif_rawdataoff = 0;
-                         tif->tif_rawdataloaded = bytecountm;
--                        
-+
- 			if (tif->tif_rawdata != NULL &&
-                             !isFillOrder(tif, td->td_fillorder) &&
- 			    (tif->tif_flags & TIFF_NOBITREV) == 0)
-@@ -1336,7 +1340,7 @@ TIFFStartStrip(TIFF* tif, uint32_t strip)
- 	if (tif->tif_flags&TIFF_NOREADRAW)
- 	{
- 		tif->tif_rawcp = NULL;
--		tif->tif_rawcc = 0;  
-+		tif->tif_rawcc = 0;
- 	}
- 	else
- 	{

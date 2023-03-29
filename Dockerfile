@@ -28,6 +28,7 @@ RUN ./INSTALL_MAGMA.sh
 
 #RUN ./PREINSTALL_JTS.sh
 
+#RUN pip intall BeautifulSoup4
 #RUN ln -s /usr/bin/clang-15 /usr/bin/clang
 #RUN ln -s /usr/bin/clang++-15 /usr/bin/clang++
 #RUN ln -s /usr/bin/clang-cpp-15 /usr/bin/clang-cpp
