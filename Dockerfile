@@ -23,19 +23,19 @@ ADD INSTALL_MAGMA.sh .
 RUN ["chmod", "+x", "INSTALL_MAGMA.sh"]
 RUN ./INSTALL_MAGMA.sh
 
-ADD PREINSTALL_JTS.sh .
-RUN ["chmod", "+x", "PREINSTALL_JTS.sh"]
+#ADD PREINSTALL_JTS.sh .
+#RUN ["chmod", "+x", "PREINSTALL_JTS.sh"]
 
-RUN ./PREINSTALL_JTS.sh
+#RUN ./PREINSTALL_JTS.sh
 
-RUN ln -s /usr/bin/clang-15 /usr/bin/clang
-RUN ln -s /usr/bin/clang++-15 /usr/bin/clang++
-RUN ln -s /usr/bin/clang-cpp-15 /usr/bin/clang-cpp
+#RUN ln -s /usr/bin/clang-15 /usr/bin/clang
+#RUN ln -s /usr/bin/clang++-15 /usr/bin/clang++
+#RUN ln -s /usr/bin/clang-cpp-15 /usr/bin/clang-cpp
 
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
-RUN pip3 install codechecker
-RUN echo "export PATH=\"$PWD/build/CodeChecker/bin:\$PATH\"" >> ~/.bashrc
-RUN source ~/.bashrc
-ADD . .
-RUN ["chmod", "+x", "createDocker.sh"]
-RUN ./createDocker.sh
+#RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+#RUN pip3 install codechecker
+#RUN echo "export PATH=\"$PWD/build/CodeChecker/bin:\$PATH\"" >> ~/.bashrc
+#RUN source ~/.bashrc
+#ADD . .
+#RUN ["chmod", "+x", "createDocker.sh"]
+#RUN ./createDocker.sh

@@ -1,0 +1,539 @@
+diff --git a/ext/exif/exif.c b/ext/exif/exif.c
+index 74dba4bf69..7d67bbb1b5 100644
+--- a/ext/exif/exif.c
++++ b/ext/exif/exif.c
+@@ -2054,7 +2054,8 @@ static inline void exif_offset_info_init(
+ /* Try to get a pointer at offset_base+offset with length dereferenceable bytes. */
+ static inline char *exif_offset_info_try_get(
+ 		const exif_offset_info *info, size_t offset, size_t length) {
+-	char *start, *end;
++        #ifdef MAGMA_ENABLE_FIXES//PHP011.patch
++        char *start, *end;
+ 	if (ptr_offset_overflows(info->offset_base, offset)) {
+ 		return NULL;
+ 	}
+@@ -2069,7 +2070,14 @@ static inline char *exif_offset_info_try_get(
+ 		return NULL;
+ 	}
+ 
+-	return start;
++	return start;//PHP011.patch
++        #else//PHP011.patch
++        if ((offset + length) > (info->valid_end - info->valid_start)) {
++            return NULL;//PHP011.patch
++        }
++	return info->offset_base + offset;//PHP011.patch
++        #endif//PHP011.patch
++
+ }
+ 
+ static inline bool exif_offset_info_contains(
+@@ -3162,11 +3170,25 @@ static bool exif_process_IFD_in_MAKERNOTE(image_info_type *ImageInfo, char * val
+ 		break;
+ 	}
+ 
++
++#ifdef MAGMA_ENABLE_FIXES//PHP009.patch
+ 	if (value_len < 2 || maker_note->offset >= value_len - 1) {
+ 		/* Do not go past the value end */
+ 		exif_error_docref("exif_read_data#error_ifd" EXIFERR_CC, ImageInfo, E_WARNING, "IFD data too short: 0x%04X offset 0x%04X", value_len, maker_note->offset);
+ 		return true;
+ 	}
++#else//PHP009.patch
++	if (maker_note->offset >= value_len) {
++		exif_error_docref("exif_read_data#error_ifd" EXIFERR_CC, ImageInfo, E_WARNING, "IFD data too short: 0x%04X offset 0x%04X", value_len, maker_note->offset);
++		return true;
++	}//PHP009.patch
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",MAGMA_OR(maker_note->offset == value_len - 1,value_len < 2));
++	#endif//PHP009.patch
++
++#endif//PHP009.patch
++
++
+ 
+ 	dir_start = value_ptr + maker_note->offset;
+ 
+@@ -3203,11 +3225,13 @@ static bool exif_process_IFD_in_MAKERNOTE(image_info_type *ImageInfo, char * val
+ 		exif_error_docref("exif_read_data#error_ifd" EXIFERR_CC, ImageInfo, E_WARNING, "Illegal IFD size: 2 + 0x%04X*12 = 0x%04X > 0x%04X", NumDirEntries, 2+NumDirEntries*12, value_len);
+ 		return false;
+ 	}
++#ifdef MAGMA_ENABLE_FIXES//PHP004.patch
+ 	if ((dir_start - value_ptr) > value_len - (2+NumDirEntries*12)) {
+ 		exif_error_docref("exif_read_data#error_ifd" EXIFERR_CC, ImageInfo, E_WARNING, "Illegal IFD size: 0x%04X > 0x%04X", (dir_start - value_ptr) + (2+NumDirEntries*12), value_len);
+-		return false;
++		return false;//PHP004.patch
+ 	}
+-
++#else//PHP004.patch
++#endif//PHP004.patch
+ 	switch (maker_note->offset_mode) {
+ 		case MN_OFFSET_MAKER:
+ 			exif_offset_info_init(&new_info, value_ptr, value_ptr, value_len);
+@@ -3941,10 +3965,18 @@ static bool exif_scan_thumbnail(image_info_type *ImageInfo)
+ 	int             n, marker;
+ 	size_t          length=2, pos=0;
+ 	jpeg_sof_info   sof_info;
+-
+-	if (!data || ImageInfo->Thumbnail.size < 4) {
++#ifdef MAGMA_ENABLE_FIXES
++	if (!data || ImageInfo->Thumbnail.size < 4) {//PHP003.patch
+ 		return false; /* nothing to do here */
+ 	}
++#else
++	#ifdef MAGMA_ENABLE_CANARIES
++	MAGMA_LOG("%MAGMA_BUG%", MAGMA_AND((bool)data, ImageInfo->Thumbnail.size < 4));
++	#endif//PHP003.patch
++	if (!data) {
++		return false; /* nothing to do here *///PHP003.patch
++	}
++#endif
+ 	if (memcmp(data, "\xFF\xD8\xFF", 3)) {
+ 		if (!ImageInfo->Thumbnail.width && !ImageInfo->Thumbnail.height) {
+ 			exif_error_docref(NULL EXIFERR_CC, ImageInfo, E_WARNING, "Thumbnail is not a JPEG image");
+@@ -3970,12 +4002,25 @@ static bool exif_scan_thumbnail(image_info_type *ImageInfo)
+ 		if (c == 0xFF)
+ 			return false;
+ 		marker = c;
++        #ifdef MAGMA_ENABLE_FIXES//PHP006.patch
+ 		if (pos>=ImageInfo->Thumbnail.size)
+ 			return false;
++	#else//PHP006.patch
++		#ifdef MAGMA_ENABLE_CANARIES
++			MAGMA_LOG("%MAGMA_BUG%", pos >= ImageInfo->Thumbnail.size);
++		#endif//PHP006.patch
++	#endif//PHP006.patch
+ 		length = php_jpg_get16(data+pos);
++
++
++        #ifdef MAGMA_ENABLE_FIXES//PHP010.patch
+ 		if (length > ImageInfo->Thumbnail.size || pos >= ImageInfo->Thumbnail.size - length) {
+-			return false;
++			return false;//PHP010.patch
+ 		}
++        #else//PHP010.patch
++        #endif//PHP010.patch
++
++
+ #ifdef EXIF_DEBUG
+ 		exif_error_docref(NULL EXIFERR_CC, ImageInfo, E_NOTICE, "Thumbnail: process section(x%02X=%s) @ x%04X + x%04X", marker, exif_get_markername(marker), pos, length);
+ #endif
+@@ -4033,8 +4078,13 @@ static bool exif_process_IFD_in_TIFF_impl(image_info_type *ImageInfo, size_t dir
+ 	int entry_tag , entry_type;
+ 	tag_table_type tag_table = exif_get_tag_table(section_index);
+ 
++#ifdef MAGMA_ENABLE_FIXES
+ 	if (ImageInfo->FileSize >= 2 && ImageInfo->FileSize - 2 >= dir_offset) {
+-		sn = exif_file_sections_add(ImageInfo, M_PSEUDO, 2, NULL);
++#else//PHP002.patch
++	if (ImageInfo->FileSize >= dir_offset+2) {//PHP002.patch
++#endif
++            sn = exif_file_sections_add(ImageInfo, M_PSEUDO, 2, NULL);
++
+ #ifdef EXIF_DEBUG
+ 		exif_error_docref(NULL EXIFERR_CC, ImageInfo, E_NOTICE, "Read from TIFF: filesize(x%04X), IFD dir(x%04X + x%04X)", ImageInfo->FileSize, dir_offset, 2);
+ #endif
+diff --git a/ext/iconv/iconv.c b/ext/iconv/iconv.c
+index 4850c00624..ef01f56550 100644
+--- a/ext/iconv/iconv.c
++++ b/ext/iconv/iconv.c
+@@ -1371,9 +1371,16 @@ static php_iconv_err_t _php_iconv_mime_decode(smart_str *pretval, const char *st
+ 							 * we can do at this point. */
+ 							if (*(p1 + 1) == '=') {
+ 								++p1;
++							#ifdef MAGMA_ENABLE_FIXES
+ 								if (str_left > 1) {
+ 									--str_left;
+-								}
++								}//PHP005.patch
++							#else//PHP005.patch
++								#ifdef MAGMA_ENABLE_CANARIES
++									MAGMA_LOG("%MAGMA_BUG%", str_left <= 1);
++								#endif//PHP005.patch
++								--str_left;//PHP005.patch
++							#endif//PHP005.patch
+ 							}
+ 
+ 							err = _php_iconv_appendl(pretval, encoded_word, (size_t)((p1 + 1) - encoded_word), cd_pl);
+diff --git a/ext/intl/locale/locale_methods.c b/ext/intl/locale/locale_methods.c
+index 1782dd6ecb..e331148440 100644
+--- a/ext/intl/locale/locale_methods.c
++++ b/ext/intl/locale/locale_methods.c
+@@ -484,13 +484,19 @@ static void get_icu_disp_value_src_php( char* tag_name, INTERNAL_FUNCTION_PARAME
+ 		RETURN_THROWS();
+ 	}
+ 
++#ifdef MAGMA_ENABLE_FIXES//PHP014.patch
+ 	if(loc_name_len > ULOC_FULLNAME_CAPACITY) {
+ 		/* See bug 67397: overlong locale names cause trouble in uloc_getDisplayName */
+ 		spprintf(&msg , 0, "locale_get_display_%s : name too long", tag_name );
+ 		intl_error_set( NULL, U_ILLEGAL_ARGUMENT_ERROR,  msg , 1 );
+ 		efree(msg);
+-		RETURN_FALSE;
++		RETURN_FALSE;//PHP014.patch
+ 	}
++#else//PHP014.patch
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",loc_name_len > ULOC_FULLNAME_CAPACITY);
++	#endif//PHP014.patch
++#endif//PHP014.patch
+ 
+ 	if(loc_name_len == 0) {
+ 		loc_name = intl_locale_get_default();
+diff --git a/ext/intl/msgformat/msgformat_parse.c b/ext/intl/msgformat/msgformat_parse.c
+index baa6dfcce7..960e3cb6e6 100644
+--- a/ext/intl/msgformat/msgformat_parse.c
++++ b/ext/intl/msgformat/msgformat_parse.c
+@@ -93,7 +93,13 @@ PHP_FUNCTION( msgfmt_parse_message )
+ 		RETURN_THROWS();
+ 	}
+ 
+-	INTL_CHECK_LOCALE_LEN(slocale_len);
++#ifdef MAGMA_ENABLE_FIXES
++	INTL_CHECK_LOCALE_LEN(slocale_len);//PHP013.patch
++#else//PHP013.patch
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",(slocale_len > INTL_MAX_LOCALE_LEN));
++	#endif//PHP013.patch
++#endif//PHP013.patch
+ 	memset(mfo, 0, sizeof(*mfo));
+ 	msgformat_data_init(&mfo->mf_data);
+ 
+diff --git a/ext/phar/phar.c b/ext/phar/phar.c
+index 988ee41e7c..2983b19369 100644
+--- a/ext/phar/phar.c
++++ b/ext/phar/phar.c
+@@ -802,13 +802,23 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 	buffer = (char *)emalloc(manifest_len);
+ 	savebuf = buffer;
+ 	endbuffer = buffer + manifest_len;
+-
++#ifdef MAGMA_ENABLE_FIXES//PHP007.patch
+ 	if (manifest_len < MANIFEST_FIXED_LEN || manifest_len != php_stream_read(fp, buffer, manifest_len)) {
+ 		MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest header)")
+-	}
++	}//PHP007.patch
+ 
+ 	/* extract the number of entries */
+-	SAFE_PHAR_GET_32(buffer, endbuffer, manifest_count);
++	SAFE_PHAR_GET_32(buffer, endbuffer, manifest_count);//PHP007.patch
++#else//PHP007.patch
++	if (manifest_len < 10 || manifest_len != php_stream_read(fp, buffer, manifest_len)) {
++		MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest header)")
++	}//PHP007.patch
++
++	PHAR_GET_32(buffer, manifest_count);
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",buffer + 4 > endbuffer);//PHP007.patch
++	#endif
++#endif//PHP007.patch
+ 
+ 	if (manifest_count == 0) {
+ 		MAPPHAR_FAIL("in phar \"%s\", manifest claims to have zero entries.  Phars must have at least 1 entry");
+@@ -827,8 +837,15 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 		}
+ 		return FAILURE;
+ 	}
+-
++#ifdef MAGMA_ENABLE_FIXES
+ 	SAFE_PHAR_GET_32(buffer, endbuffer, manifest_flags);
++#else
++	PHAR_GET_32(buffer, manifest_flags);
++
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",buffer + 4 > endbuffer);
++	#endif
++#endif
+ 
+ 	manifest_flags &= ~PHAR_HDR_COMPRESSION_MASK;
+ 	manifest_flags &= ~PHAR_FILE_COMPRESSION_MASK;
+@@ -1036,13 +1053,23 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 	}
+ 
+ 	/* extract alias */
++#ifdef MAGMA_ENABLE_FIXES
+ 	SAFE_PHAR_GET_32(buffer, endbuffer, tmp_len);
+-
++#else
++	PHAR_GET_32(buffer, manifest_flags);
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",buffer + 4 > endbuffer);
++	#endif
++#endif
+ 	if (buffer + tmp_len > endbuffer) {
+ 		MAPPHAR_FAIL("internal corruption of phar \"%s\" (buffer overrun)");
+ 	}
+-
+-	if (manifest_len < MANIFEST_FIXED_LEN + tmp_len) {
++#ifdef MAGMA_ENABLE_FIXES
++	if (manifest_len < MANIFEST_FIXED_LEN + tmp_len)
++#else
++	if (manifest_len < 10 + tmp_len)
++#endif
++	{
+ 		MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest header)")
+ 	}
+ 
+@@ -1080,7 +1107,11 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 	}
+ 
+ 	/* we have 5 32-bit items plus 1 byte at least */
++#ifdef MAGMA_ENABLE_FIXES
+ 	if (manifest_count > ((manifest_len - MANIFEST_FIXED_LEN - tmp_len) / (5 * 4 + 1))) {
++#else
++	if (manifest_count > ((manifest_len - 10 - tmp_len) / (5 * 4 + 1))) {
++#endif
+ 		/* prevent serious memory issues */
+ 		MAPPHAR_FAIL("internal corruption of phar \"%s\" (too many manifest entries for size of manifest)")
+ 	}
+@@ -1089,11 +1120,26 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 	mydata->is_persistent = PHAR_G(persist);
+ 
+ 	/* check whether we have meta data, zero check works regardless of byte order */
++#ifdef MAGMA_ENABLE_FIXES
+ 	SAFE_PHAR_GET_32(buffer, endbuffer, len);
++#else
++	PHAR_GET_32(buffer, len);
++	#ifdef MAGMA_ENABLE_CANARIES
++		MAGMA_LOG("%MAGMA_BUG%",buffer + 4 > endbuffer);
++	#endif
++#endif
++
+ 	if (mydata->is_persistent) {
+ 		if (!len) {
+ 			/* FIXME: not sure why this is needed but removing it breaks tests */
++		#ifdef MAGMA_ENABLE_FIXES
+ 			SAFE_PHAR_GET_32(buffer, endbuffer, len);
++		#else
++			PHAR_GET_32(buffer, len);
++			#ifdef MAGMA_ENABLE_CANARIES
++				MAGMA_LOG("%MAGMA_BUG%",buffer + 4 > endbuffer);
++			#endif
++		#endif
+ 		}
+ 	}
+ 	if(len > (size_t)(endbuffer - buffer)) {
+@@ -1122,9 +1168,20 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 	entry.is_persistent = mydata->is_persistent;
+ 
+ 	for (manifest_index = 0; manifest_index < manifest_count; ++manifest_index) {
++#ifdef MAGMA_ENABLE_FIXES//PHP015.patch
+ 		if (buffer + 28 > endbuffer) {
+ 			MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest entry)")
+ 		}
++	#else//PHP015.patch
++		if (buffer + 4 > endbuffer) {
++			MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest entry)")
++		}//PHP015.patch
++		#ifdef MAGMA_ENABLE_CANARIES
++			MAGMA_LOG("%MAGMA_BUG%",buffer + 28 > endbuffer);
++		#endif//PHP015.patch
++	#endif//PHP015.patch
++
++
+ 
+ 		PHAR_GET_32(buffer, entry.filename_len);
+ 
+@@ -1135,10 +1192,20 @@ static int phar_parse_pharfile(php_stream *fp, char *fname, size_t fname_len, ch
+ 		if (entry.is_persistent) {
+ 			entry.manifest_pos = manifest_index;
+ 		}
+-
++	#ifdef MAGMA_ENABLE_FIXES
+ 		if (entry.filename_len > (size_t)(endbuffer - buffer - 24)) {
+ 			MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest entry)");
+ 		}
++	#else//PHP015.patch
++		#ifdef MAGMA_ENABLE_CANARIES
++			MAGMA_LOG("%MAGMA_BUG%",entry.filename_len > INT_MAX - 20);
++			MAGMA_LOG("%MAGMA_BUG%",MAGMA_AND(entry.filename_len > (size_t)(endbuffer - buffer - 24),
++								entry.filename_len <= (size_t)(endbuffer - buffer - 20)));
++		#endif//PHP015.patch
++		if (entry.filename_len + 20 > endbuffer - buffer) {
++			MAPPHAR_FAIL("internal corruption of phar \"%s\" (truncated manifest entry)");
++		}
++       #endif//PHP015.patch
+ 
+ 		if ((manifest_ver & PHAR_API_VER_MASK) >= PHAR_API_MIN_DIR && buffer[entry.filename_len - 1] == '/') {
+ 			entry.is_dir = 1;
+@@ -2047,7 +2114,14 @@ next_extension:
+ 	}
+ 
+ 	while (pos != filename && (*(pos - 1) == '/' || *(pos - 1) == '\0')) {
+-		pos = memchr(pos + 1, '.', filename_len - (pos - filename) - 1);
++	#ifdef MAGMA_ENABLE_FIXES
++            pos = memchr(pos + 1, '.', filename_len - (pos - filename) - 1); //PHP001.patch
++	#else
++		#ifdef MAGMA_ENABLE_CANARIES
++			MAGMA_LOG("%MAGMA_BUG%", memchr(pos + 1, '.', filename_len - (pos - filename) - 1) == NULL);//PHP001.patch
++		#endif
++		pos = memchr(pos + 1, '.', filename_len - (pos - filename) + 1);//PHP001.patch
++	#endif
+ 		if (!pos) {
+ 			return FAILURE;
+ 		}
+diff --git a/ext/phar/util.c b/ext/phar/util.c
+index 314acfe81a..3b5b4e6261 100644
+--- a/ext/phar/util.c
++++ b/ext/phar/util.c
+@@ -1603,13 +1603,18 @@ int phar_verify_signature(php_stream *fp, size_t end_of_phar, uint32_t sig_type,
+ 		case PHAR_SIG_SHA512: {
+ 			unsigned char digest[64];
+ 			PHP_SHA512_CTX context;
+-
+-			if (sig_len < sizeof(digest)) {
++		#ifdef MAGMA_ENABLE_FIXES
++			if (sig_len < sizeof(digest)) {//PHP016.patch
+ 				if (error) {
+ 					spprintf(error, 0, "broken signature");
+ 				}
+-				return FAILURE;
++				return FAILURE;//PHP016.patch
+ 			}
++		#else//PHP016.patch
++			#ifdef MAGMA_ENABLE_CANARIES
++				MAGMA_LOG("%MAGMA_BUG%",sig_len < sizeof(digest));
++			#endif//PHP016.patch
++		#endif//PHP016.patch
+ 
+ 			PHP_SHA512Init(&context);
+ 			read_len = end_of_phar;
+@@ -1643,13 +1648,18 @@ int phar_verify_signature(php_stream *fp, size_t end_of_phar, uint32_t sig_type,
+ 		case PHAR_SIG_SHA256: {
+ 			unsigned char digest[32];
+ 			PHP_SHA256_CTX context;
+-
++		#ifdef MAGMA_ENABLE_FIXES
+ 			if (sig_len < sizeof(digest)) {
+-				if (error) {
++				if (error) {//PHP016.patch
+ 					spprintf(error, 0, "broken signature");
+ 				}
+ 				return FAILURE;
+ 			}
++			#else//PHP016.patch
++			#ifdef MAGMA_ENABLE_CANARIES
++				MAGMA_LOG("%MAGMA_BUG%",sig_len < sizeof(digest));
++			#endif//PHP016.patch
++		#endif//PHP016.patch
+ 
+ 			PHP_SHA256Init(&context);
+ 			read_len = end_of_phar;
+@@ -1683,13 +1693,19 @@ int phar_verify_signature(php_stream *fp, size_t end_of_phar, uint32_t sig_type,
+ 		case PHAR_SIG_SHA1: {
+ 			unsigned char digest[20];
+ 			PHP_SHA1_CTX  context;
+-
++		#ifdef MAGMA_ENABLE_FIXES//PHP016.patch
+ 			if (sig_len < sizeof(digest)) {
+ 				if (error) {
+ 					spprintf(error, 0, "broken signature");
+ 				}
+ 				return FAILURE;
+-			}
++			}//PHP016.patch
++			#else//PHP016.patch
++			#ifdef MAGMA_ENABLE_CANARIES
++				MAGMA_LOG("%MAGMA_BUG%",sig_len < sizeof(digest));
++			#endif//PHP016.patch
++		#endif//PHP016.patch
++
+ 
+ 			PHP_SHA1Init(&context);
+ 			read_len = end_of_phar;
+@@ -1723,13 +1739,19 @@ int phar_verify_signature(php_stream *fp, size_t end_of_phar, uint32_t sig_type,
+ 		case PHAR_SIG_MD5: {
+ 			unsigned char digest[16];
+ 			PHP_MD5_CTX   context;
+-
++		#ifdef  MAGMA_ENABLE_FIXES//PHP016.patch
+ 			if (sig_len < sizeof(digest)) {
+ 				if (error) {
+ 					spprintf(error, 0, "broken signature");
+ 				}
+ 				return FAILURE;
+ 			}
++			#else//PHP016.patch
++			#ifdef MAGMA_ENABLE_CANARIES
++				MAGMA_LOG("%MAGMA_BUG%",sig_len < sizeof(digest));
++			#endif//PHP016.patch
++		#endif//PHP016.patch
++
+ 
+ 			PHP_MD5Init(&context);
+ 			read_len = end_of_phar;
+diff --git a/ext/phar/zip.c b/ext/phar/zip.c
+index 31d4bd2998..b0f7478554 100644
+--- a/ext/phar/zip.c
++++ b/ext/phar/zip.c
+@@ -447,11 +447,22 @@ foundit:
+ 			php_stream_seek(fp, sizeof(phar_zip_file_header) + entry.header_offset + entry.filename_len + PHAR_GET_16(zipentry.extra_len), SEEK_SET);
+ 			sig = (char *) emalloc(entry.uncompressed_filesize);
+ 			read = php_stream_read(fp, sig, entry.uncompressed_filesize);
++		#ifdef MAGMA_ENABLE_FIXES//PHP016.patch
+ 			if (read != entry.uncompressed_filesize || read <= 8) {
+ 				php_stream_close(sigfile);
+ 				efree(sig);
+ 				PHAR_ZIP_FAIL("signature cannot be read");
++			}//PHP016.patch
++		#else//PHP016.patch
++			if (read != entry.uncompressed_filesize) {//PHP016.patch
++				php_stream_close(sigfile);
++				efree(sig);
++				PHAR_ZIP_FAIL("signature cannot be read");
+ 			}
++			#ifdef MAGMA_ENABLE_CANARIES//PHP016.patch
++				MAGMA_LOG("%MAGMA_BUG%",read <= 8);
++			#endif//PHP016.patch
++		#endif//PHP016.patch
+ 			mydata->sig_flags = PHAR_GET_32(sig);
+ 			if (FAILURE == phar_verify_signature(sigfile, php_stream_tell(sigfile), mydata->sig_flags, sig + 8, entry.uncompressed_filesize - 8, fname, &mydata->signature, &sig_len, error)) {
+ 				efree(sig);
+diff --git a/ext/standard/dns.c b/ext/standard/dns.c
+index c4cfbc0d6a..51f7e131d1 100644
+--- a/ext/standard/dns.c
++++ b/ext/standard/dns.c
+@@ -481,10 +481,14 @@ static u_char *php_parserr(u_char *cp, u_char *end, querybuf *answer, int type_t
+ 	GETLONG(ttl, cp);
+ 	GETSHORT(dlen, cp);
+ 	CHECKCP(dlen);
+-	if (dlen == 0) {
++
++        #ifdef MAGMA_ENABLE_FIXES//PHP008.patch
++	if (dlen == 0) {//PHP008.patch
+ 		/* No data in the response - nothing to do */
+ 		return NULL;
+ 	}
++       #else//PHP008.patch
++       #endif//PHP008.patch
+ 	if (type_to_fetch != DNS_T_ANY && type != type_to_fetch) {
+ 		cp += dlen;
+ 		return cp;
+diff --git a/ext/standard/http_fopen_wrapper.c b/ext/standard/http_fopen_wrapper.c
+index 761d46b2c9..28bb15c173 100644
+--- a/ext/standard/http_fopen_wrapper.c
++++ b/ext/standard/http_fopen_wrapper.c
+@@ -708,12 +708,22 @@ finish:
+ 								tmp_line, response_code);
+ 				}
+ 			}
++                        #ifdef MAGMA_ENABLE_FIXES//PHP012.patch
+ 			if (tmp_line_len >= 1 && tmp_line[tmp_line_len - 1] == '\n') {
+ 				--tmp_line_len;
+ 				if (tmp_line_len >= 1 &&tmp_line[tmp_line_len - 1] == '\r') {
+ 					--tmp_line_len;
+ 				}
+-			}
++			}//PHP012.patch
++                        #else//PHP012.patch
++                        if (tmp_line[tmp_line_len - 1] == '\n') {
++                            --tmp_line_len;
++                            if (tmp_line[tmp_line_len - 1] == '\r') {
++                                --tmp_line_len;
++                            }
++			}//PHP012.patch
++                        #endif//PHP012.patch
++
+ 			ZVAL_STRINGL(&http_response, tmp_line, tmp_line_len);
+ 			zend_hash_next_index_insert(Z_ARRVAL_P(response_header), &http_response);
+ 		} else {

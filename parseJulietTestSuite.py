@@ -8,8 +8,9 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
+from bs4 import BeautifulSoup
 
-import sys
+import pickle
 
 import multiprocessing
 
@@ -100,6 +101,7 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
     mappings = getCWECheckerMapping()
     baseDir = os.path.dirname(os.path.realpath(__file__))
 
+    toRunAndBugs = dict()
     toRun = dict()
     toRunTotal = set()
 
@@ -117,9 +119,11 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
                 if(bug.cwe in mappings and not bug.isOnlyWindows):
                     if(bug.idN in toRun):
                         toRun[bug.idN].add(mappings[bug.cwe])
+                        toRunAndBugs[bug.idN] += 1
                     else:
                         toRun[bug.idN] = set()
                         toRun[bug.idN].add(mappings[bug.cwe])
+                        toRunAndBugs[bug.idN] = 1
 
                     f = True
                     if(len(array) == 0):
@@ -159,7 +163,7 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
                     fileToBug.close()
 
     print("Finished adding Codechecker flags to each files")
-    return toRun, toRunTotal
+    return toRun, toRunTotal, toRunAndBugs
 
 
 # We want to either omit the good code or the bad code for each test suites.
@@ -192,17 +196,14 @@ def addCodeCheckerFlagToCFlags(path):
 
 
 def workFunction(idN):
-    sys.stdout.flush()
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
     print("Creating compilation database (good) for " + idN)
-    sys.stdout.flush()
     path = os.path.join(pathJTS, idN)
 
     print("Creating compilation database (bad) for " + idN)
-    sys.stdout.flush()
     addCodeCheckerFlagToCFlags(path + "/Makefile")
 
     makeGood = 'make build CODE_CHECKER_FLAG=-DOMITBAD'
@@ -227,9 +228,59 @@ def interceptBuildForJulietTestSuite(toRun):
     pool.close()
 
 
-def runCodeCheckerStatistics(m):
-    print("")
-#    raise NotImplementedError
+def runCodeCheckerStatistics(toRun, toRunAndBugs):
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    reportPath = os.path.join(baseDir,
+                              Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
+
+    rates = dict()
+
+    for idN, checkers in toRun.items():
+        pathOut = os.path.join(reportPath, idN)
+
+        pathOutG = os.path.join(pathOut, "reports_htmlGOOD", "index.html")
+        pathOutB = os.path.join(pathOut, "reports_htmlBAD", "index.html")
+
+        tp = 0
+        tn = 0
+        fp = 0
+        fn = 0
+
+        with open(pathOutB) as fil:
+            soup = BeautifulSoup(fil, 'html.parser')
+
+        trs = soup.find('table').find_all('tr')
+
+        fn = toRunAndBugs[idN]
+        for i in trs:
+            tds = i.find_all('td')
+            if(len(tds) > 0):
+                if(tds[-1].text.strip() == "confirmed"):
+                    tp += 1
+                    fn -= 1
+                else:
+                    fp += 1
+
+        with open(pathOutG) as fil:
+            soup = BeautifulSoup(fil, 'html.parser')
+
+        trs = soup.find('table').find_all('tr')
+
+        tn = toRunAndBugs[idN]
+        if(len(trs) > 1):
+            fn = len(trs)-1
+            tn = tn - fn
+            if(tn < 0):
+                tn = 0.0
+
+        array = [checkers]
+        array.append([tp, tn, fp, fn, tp/(tp+fn), tn/(tn+fp),
+                      fn/(fn+tp), fp/(fp+tn)])
+
+        rates[idN] = array
+
+    with open('rates.pickle', 'wb') as handle:
+        pickle.dump(rates, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def runCodeChecker(toRun):
@@ -240,7 +291,6 @@ def runCodeChecker(toRun):
     reportPath = os.path.join(baseDir,
                               Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
 
-    #TODO: Parallelize?
     for idN, checkers in toRun.items():
         pathIn = os.path.join(pathJTS, idN)
         pathOut = os.path.join(reportPath, idN)
@@ -303,15 +353,15 @@ if __name__ == '__main__':
     if(args.b is not None):
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
 
-    if(not args.o and not args.i and not args.r):
+    if(not args.o and not args.i and not args.r and not args.s):
         print("Here")
-        m, e = addFlagsToFiles(bugsMappedInFile, True)
+        m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, True)
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
-        runCodeCheckerStatistics(m)
+        runCodeCheckerStatistics(m, toRunAndBugs)
         exit(0)
 
-    m, e = addFlagsToFiles(bugsMappedInFile, args.o)
+    m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, args.o)
 
     if(args.i):
         interceptBuildForJulietTestSuite(m.keys())
@@ -320,4 +370,4 @@ if __name__ == '__main__':
         runCodeChecker(m)
 
     if(args.s):
-        runCodeCheckerStatistics(m)
+        runCodeCheckerStatistics(m, toRunAndBugs)
