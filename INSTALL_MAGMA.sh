@@ -8,15 +8,15 @@ cd workdir/magma/
 git apply ../../data/buildMagma.patch
 popd
 
-mkdir -p workdir/magma_libs/libpng
-export TARGET=workdir/magma_libs/libpng
-bash workdir/magma/targets/libpng/preinstall.sh
-bash workdir/magma/targets/libpng/fetch.sh
-MAGMA_PATCH="$current/data/MagmaLibPatches/libpngPatchesModified.patch"
-cd "$TARGET/repo"
-git apply $MAGMA_PATCH
-cd "$current"
-bash workdir/magma/targets/libpng/build.sh
+#mkdir -p workdir/magma_libs/libpng
+#export TARGET=workdir/magma_libs/libpng
+#bash workdir/magma/targets/libpng/preinstall.sh
+#bash workdir/magma/targets/libpng/fetch.sh
+#MAGMA_PATCH="$current/data/MagmaLibPatches/libpngPatches.patch"
+#cd "$TARGET/repo"
+#git apply $MAGMA_PATCH
+#cd "$current"
+#bash workdir/magma/targets/libpng/build.sh
 
 
 #mkdir -p workdir/magma_libs/libsndfile
