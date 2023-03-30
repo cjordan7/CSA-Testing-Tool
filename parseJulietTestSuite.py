@@ -235,6 +235,8 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
     rates = dict()
 
+    # TODO: Run parallelism
+
     for idN, checkers in toRun.items():
         pathOut = os.path.join(reportPath, idN)
 
@@ -283,8 +285,22 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
         pickle.dump(rates, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
+def filterIds():
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
+    subfolders = [f.path for f in os.scandir(pathJTS) if f.is_dir()]
+    print(subfolders)
+    filtered = set()
+    for i in subfolders:
+        newPath = os.path.join(i, "reports_htmlBAD")
+        newPath2 = os.path.join(i, "reports_htmlGOOD")
+        if(os.path.isdir(newPath) and os.path.isdir(newPath2)):
+            filtered.add(i.split("/")[-1])
+
+    return filtered
+
+
 def runCodeChecker3(toRun):
-    print(idN)
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
@@ -348,7 +364,7 @@ def runCodeChecker2(idN, checkers):
     print("Running codechecker analysis (bad) for " + idN)
     codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
     codeChecker.convertHTML(pathOut, "BAD")
-    
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="parseJulietTestSuite",
@@ -399,6 +415,9 @@ if __name__ == '__main__':
 
     if(not args.o and not args.i and not args.r and not args.s):
         m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, True)
+        for k in filterIds():
+            m.pop(k, None)
+
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
         runCodeCheckerStatistics(m, toRunAndBugs)
@@ -406,6 +425,12 @@ if __name__ == '__main__':
 
     m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, args.o)
 
+    for k in filterIds():
+        print(k)
+        m.pop(k, None)
+
+    raise NotImplementedError
+        
     if(args.i):
         interceptBuildForJulietTestSuite(m.keys())
 
