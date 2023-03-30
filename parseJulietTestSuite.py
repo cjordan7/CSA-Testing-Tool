@@ -8,9 +8,6 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
-import threading
-from threading import Thread
-
 from bs4 import BeautifulSoup
 
 import pickle
@@ -227,6 +224,8 @@ def interceptBuildForJulietTestSuite(toRun):
     pool.map(workFunction, toRun)
     pool.close()
 
+# def runCodeCheckerStatisticsSeq(toRun, toRunAndBugs)
+
 
 def runCodeCheckerStatistics(toRun, toRunAndBugs):
     baseDir = os.path.dirname(os.path.realpath(__file__))
@@ -400,11 +399,15 @@ if __name__ == '__main__':
 
     parser.add_argument("-b", nargs='+',
                         help="run the corresponding bug ids. " +
-                        "For example: -b 111378 111866")
+                        "For example: -b 240782 111866")
 
     parser.add_argument("-s", action="store_true",
                         help="run statistics. " +
-                        "For example: -s 111378 111866")
+                        "For example: -s 240782 111866")
+
+    parser.add_argument("--ignore", action="store_true",
+                        help="run statistics. " +
+                        "Ignore already ran reports")
 
     args = parser.parse_args()
 
@@ -415,10 +418,11 @@ if __name__ == '__main__':
 
     if(not args.o and not args.i and not args.r and not args.s):
         m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, True)
-        for k in filterIds():
-            m.pop(k, None)
 
-        print(len(m))
+        if(args.ignore is not None):
+            for k in filterIds():
+                m.pop(k, None)
+
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
         runCodeCheckerStatistics(m, toRunAndBugs)
@@ -426,9 +430,9 @@ if __name__ == '__main__':
 
     m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, args.o)
 
-    for k in filterIds():
-        print(k)
-        m.pop(k, None)
+    if(args.ignore is not None):
+        for k in filterIds():
+            m.pop(k, None)
 
     print(len(m))
 

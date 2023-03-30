@@ -5,6 +5,6 @@
 # docker run -v $(pwd)/reports:/home/CSA-Testing-Tool/reports csatool:csatool /bin/bash createDocker.sh
 
 
-# docker run csatool:csatool /bin/bash createDocker.sh
+# docker run csatool:csatool /bin/bash creagsgdteDocker.sh
 
-python3 parseJulietTestSuite.py
+python3 parseMagma.py

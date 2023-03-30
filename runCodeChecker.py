@@ -78,6 +78,7 @@ class RunCodeChecker():
 
     def convertHTML(self, reportPath, goodOrBad):
         #TODO: Redirect output to nothing
+        #TODO: Export json
         subprocess.run("CodeChecker parse --export html --output " +
                        "./reports_html" + goodOrBad + " ./" + goodOrBad,
                        shell=True, cwd=reportPath)

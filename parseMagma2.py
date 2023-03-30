@@ -239,11 +239,12 @@ def runCodeChecker(mappingLibsCheckers):
         checkers = mappingLibsCheckers[lib]
         print(pathReport2)
         codeChecker.runCodeChecker(pathCC, pathReport2, checkers, "")
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
     mappingLibsCheckers, findableBugs = getCheckers(readMagmaCWEs())
 
-    runCodeChecker(mappingLibsCheckers)
-    #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
+    #runCodeChecker(mappingLibsCheckers)
+    runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
     #runCodeCheckerStatistics(m, toRunAndBugs)

@@ -26,7 +26,7 @@ RUN ./INSTALL_MAGMA.sh
 ADD PREINSTALL_JTS.sh .
 RUN ["chmod", "+x", "PREINSTALL_JTS.sh"]
 
-RUN ./PREINSTALL_JTS.sh
+#RUN ./PREINSTALL_JTS.sh
 
 RUN pip install BeautifulSoup4
 RUN ln -s /usr/bin/clang-15 /usr/bin/clang
