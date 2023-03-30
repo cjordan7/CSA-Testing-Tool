@@ -289,7 +289,7 @@ def filterIds():
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
     subfolders = [f.path for f in os.scandir(pathJTS) if f.is_dir()]
-    print(subfolders)
+
     filtered = set()
     for i in subfolders:
         newPath = os.path.join(i, "reports_htmlBAD")
@@ -418,6 +418,7 @@ if __name__ == '__main__':
         for k in filterIds():
             m.pop(k, None)
 
+        print(len(m))
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
         runCodeCheckerStatistics(m, toRunAndBugs)
@@ -429,8 +430,8 @@ if __name__ == '__main__':
         print(k)
         m.pop(k, None)
 
-    raise NotImplementedError
-        
+    print(len(m))
+
     if(args.i):
         interceptBuildForJulietTestSuite(m.keys())
 
