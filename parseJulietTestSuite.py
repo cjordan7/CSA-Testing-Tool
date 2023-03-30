@@ -198,9 +198,6 @@ def addCodeCheckerFlagToCFlags(path):
     f.close()
 
 
-my_lock = threading.Lock()
-a = 0
-    
 def workFunction(idN):
     global a
     codeChecker = RunCodeChecker()
@@ -219,10 +216,6 @@ def workFunction(idN):
     codeChecker.compileDB(path, makeGood, "GOOD")
     codeChecker.compileDB(path, makeBad, "BAD")
 
-    with my_lock:
-        a += 1
-        print(a)
-
     # codeChecker.runInterceptBuild(path, makeGood, "GOOD")
     # codeChecker.runInterceptBuild(path, makeBad, "BAD")
 
@@ -231,7 +224,6 @@ def interceptBuildForJulietTestSuite(toRun):
     print("Run codechecker for juliet test suite.")
 
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    pool = multiprocessing.Pool(1)
     pool.map(workFunction, toRun)
     pool.close()
 
@@ -291,7 +283,8 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
         pickle.dump(rates, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def runCodeChecker(toRun):
+def runCodeChecker3(toRun):
+    print(idN)
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
@@ -313,6 +306,49 @@ def runCodeChecker(toRun):
         codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
         codeChecker.convertHTML(pathOut, "BAD")
 
+
+def runCodeChecker(toRun):
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    pool.starmap(runCodeChecker2, toRun.items())
+    pool.close()
+
+
+def runCodeChecker2(idN, checkers):
+    print(idN)
+    codeChecker = RunCodeChecker()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
+
+    reportPath = os.path.join(baseDir,
+                              Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
+
+    #for idN, checkers in toRun.items():
+        #pathIn = os.path.join(pathJTS, idN)
+        #pathOut = os.path.join(reportPath, idN)
+        #pathOutGood = os.path.join(pathOut, "GOOD")
+        #
+        #print("Running codechecker analysis (good) for " + idN)
+        #codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
+        #codeChecker.convertHTML(pathOut, "GOOD")
+        #
+        #pathOutBad = os.path.join(pathOut, "BAD")
+        #print("Running codechecker analysis (bad) for " + idN)
+        #codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
+        #codeChecker.convertHTML(pathOut, "BAD")
+
+    pathIn = os.path.join(pathJTS, idN)
+    pathOut = os.path.join(reportPath, idN)
+    pathOutGood = os.path.join(pathOut, "GOOD")
+
+    print("Running codechecker analysis (good) for " + idN)
+    codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
+    codeChecker.convertHTML(pathOut, "GOOD")
+
+    pathOutBad = os.path.join(pathOut, "BAD")
+    print("Running codechecker analysis (bad) for " + idN)
+    codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
+    codeChecker.convertHTML(pathOut, "BAD")
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="parseJulietTestSuite",

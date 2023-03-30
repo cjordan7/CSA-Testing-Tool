@@ -69,7 +69,7 @@ mkdir -p workdir/magma_libs/openssl
 export TARGET=workdir/magma_libs/openssl
 bash workdir/magma/targets/openssl/preinstall.sh
 bash workdir/magma/targets/openssl/fetch.sh
-MAGMA_PATCH="$current/data/MagmaLibPatches/openssl.patch"
+MAGMA_PATCH="$current/data/MagmaLibPatches/openSSLPatches.patch"
 cd "$TARGET/repo"
 git apply $MAGMA_PATCH
 cd "$current"
@@ -79,7 +79,7 @@ mkdir -p workdir/magma_libs/php
 export TARGET=workdir/magma_libs/php
 bash workdir/magma/targets/php/preinstall.sh
 bash workdir/magma/targets/php/fetch.sh
-MAGMA_PATCH="$current/data/MagmaLibPatches/php.patch"
+MAGMA_PATCH="$current/data/MagmaLibPatches/phpPatches.patch"
 cd "$TARGET/repo"
 git apply $MAGMA_PATCH
 cd "$current"
