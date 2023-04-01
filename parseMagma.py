@@ -215,7 +215,7 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
         bugsFound = set()
 
 
-def createCompilationDatabases(libsPatches, findableBugs):
+def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathIn = os.path.join(baseDir, "workdir", "magma_libs")
@@ -244,13 +244,25 @@ def createCompilationDatabases(libsPatches, findableBugs):
             patchName = patch.split("/")[-1][0:-6]
 
             if(patchName in findableBugsLib):
-                print("Magma: Creating database for " + libName + " " + patchName)
-                e = subprocess.run("git apply " + patch, shell=True, cwd=pathCC,
+                e = subprocess.run("git apply " + patch, shell=True,
+                                   cwd=pathCC,
                                    stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
                 if(e.returncode == 0):
+                    print("Magma: Creating database for " + libName + " " + patchName)
                     codeChecker.compileDB(pathCC, command, patchName)
-                    subprocess.run("git apply -R " + patch, shell=True, cwd=pathCC)#,
+
+                    # patchName = f.split("/")[-1].split(".")[0][-6:]
+                    checkers = findableBugs[libName]
+                    checker = checkers[patchName]
+
+                    # TODO:...
+                    codeChecker.runCodeChecker(pathCC, pathReport2,
+                                               [checker],
+                                               patchName)
+                    subprocess.run("git apply -R " + patch, shell=True,
+                                   cwd=pathCC)#,
+
                 #stdout=subprocess.DEVNULL,
                 #stderr=subprocess.DEVNULL)
                 #stdout=subprocess.DEVNULL,
@@ -327,17 +339,17 @@ if __name__ == '__main__':
 
     if(not args.o and not args.i and not args.r and not args.s):
         libsPatches = addCommentsToPatches()
-        createCompilationDatabases(libsPatches, findableBugs)
-        runCodeChecker(findableBugs)
+        createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs)
+        #runCodeChecker(findableBugs)
         #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
         exit(0)
 
     if(args.i):
         libsPatches = addCommentsToPatches()
-        createCompilationDatabases(libsPatches, findableBugs)
+        createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs)
 
-    if(args.r):
-        runCodeChecker(findableBugs)
+    #if(args.r):
+        #runCodeChecker(findableBugs)
 
     #if(args.s):
         #runCodeCheckerStatistics(m, toRunAndBugs)
