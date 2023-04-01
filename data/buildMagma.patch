@@ -1,5 +1,5 @@
 diff --git a/targets/libpng/build.sh b/targets/libpng/build.sh
-index 9d2dd009..92c8097c 100755
+index 9d2dd009..bba6269e 100755
 --- a/targets/libpng/build.sh
 +++ b/targets/libpng/build.sh
 @@ -18,12 +18,4 @@ cd "$TARGET/repo"
@@ -16,9 +16,9 @@ index 9d2dd009..92c8097c 100755
 -     -o $OUT/libpng_read_fuzzer \
 -     $LDFLAGS .libs/libpng16.a $LIBS -lz
 \ No newline at end of file
-+compiledb -n make libpng16.la
++compiledb -n make -j$(nproc) libpng16.la
 diff --git a/targets/libsndfile/build.sh b/targets/libsndfile/build.sh
-index 89a808d9..eecc5943 100755
+index 89a808d9..fa6cb2d1 100755
 --- a/targets/libsndfile/build.sh
 +++ b/targets/libsndfile/build.sh
 @@ -15,8 +15,6 @@ fi
@@ -31,9 +31,9 @@ index 89a808d9..eecc5943 100755
 -make -j$(nproc) ossfuzz/sndfile_fuzzer
 -
 -cp -v ossfuzz/sndfile_fuzzer $OUT/
-+compiledb -n make
++compiledb -n make -j$(nproc)
 diff --git a/targets/libtiff/build.sh b/targets/libtiff/build.sh
-index fad7e494..e3a7b5a8 100755
+index fad7e494..2f2428f0 100755
 --- a/targets/libtiff/build.sh
 +++ b/targets/libtiff/build.sh
 @@ -22,11 +22,4 @@ cd "$TARGET/repo"
@@ -48,9 +48,9 @@ index fad7e494..e3a7b5a8 100755
 -    contrib/oss-fuzz/tiff_read_rgba_fuzzer.cc -o $OUT/tiff_read_rgba_fuzzer \
 -    $WORK/lib/libtiffxx.a $WORK/lib/libtiff.a -lz -ljpeg -Wl,-Bstatic -llzma -Wl,-Bdynamic \
 -    $LDFLAGS $LIBS
-+compiledb -n make
++compiledb -n make -j$(nproc)
 diff --git a/targets/libxml2/build.sh b/targets/libxml2/build.sh
-index fb216a88..85d9eb14 100755
+index fb216a88..2e3852bc 100755
 --- a/targets/libxml2/build.sh
 +++ b/targets/libxml2/build.sh
 @@ -21,12 +21,4 @@ cd "$TARGET/repo"
@@ -66,123 +66,9 @@ index fb216a88..85d9eb14 100755
 -      "$TARGET/src/$fuzzer.cc" -o "$OUT/$fuzzer" \
 -      .libs/libxml2.a $LDFLAGS $LIBS -lz -llzma
 -done
-+compiledb -n make all
-diff --git a/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS2 b/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS2
-index d748d1a4..80aaf945 100644
---- a/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS2
-+++ b/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS2
-@@ -1,13 +1,3 @@
--<!DOCTYPE doc [
--<!ELEMENT doc (#PCDATA | ns:a | ns:b)*>
--<!ATTLIST doc
--          attr  CDATA #REQUIRED
--          xmlns:ns CDATA #IMPLIED>
--<!ELEMENT a EMPTY>
--<!ELEMENT b (#PCDATA)>
--]>
--<ns:doc ns:attr="val" xmlns:ns="http://www.example.org/test/">
--   <ns:a/>
--   <ns:b>first line</ns:b>
--   <ns:b>second line</ns:b>
--</ns:doc>
-+<?xml version="1.0"?>
-+<dia:diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/"
-+             dia:testattr="test"/>
-diff --git a/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS3 b/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS3
-index f53b0ca9..76bb20d4 100644
---- a/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS3
-+++ b/targets/libxml2/corpus/libxml2_xml_read_memory_fuzzer/NS3
-@@ -1,9 +1,3 @@
--<?xml version="1.0" ?>
--<!DOCTYPE foo [
--<!ELEMENT foo EMPTY>
--<!ATTLIST foo
--    xmlns CDATA #FIXED "http://example.com/fooo"
--    xmlns:foo CDATA #REQUIRED
--    foo:info CDATA #IMPLIED>
--]>
--<foo xmlns="http://example.com/foo" xmlns:foo="http://example.com/fo" foo:info="toto"/>
-+<?xml version="1.0"?>
-+<dia:diagram dia:testattr="test"
-+             xmlns:dia="http://www.lysator.liu.se/~alla/dia/"/>
-diff --git a/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS2 b/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS2
-index d748d1a4..80aaf945 100644
---- a/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS2
-+++ b/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS2
-@@ -1,13 +1,3 @@
--<!DOCTYPE doc [
--<!ELEMENT doc (#PCDATA | ns:a | ns:b)*>
--<!ATTLIST doc
--          attr  CDATA #REQUIRED
--          xmlns:ns CDATA #IMPLIED>
--<!ELEMENT a EMPTY>
--<!ELEMENT b (#PCDATA)>
--]>
--<ns:doc ns:attr="val" xmlns:ns="http://www.example.org/test/">
--   <ns:a/>
--   <ns:b>first line</ns:b>
--   <ns:b>second line</ns:b>
--</ns:doc>
-+<?xml version="1.0"?>
-+<dia:diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/"
-+             dia:testattr="test"/>
-diff --git a/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS3 b/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS3
-index f53b0ca9..76bb20d4 100644
---- a/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS3
-+++ b/targets/libxml2/corpus/libxml2_xml_reader_for_file_fuzzer/NS3
-@@ -1,9 +1,3 @@
--<?xml version="1.0" ?>
--<!DOCTYPE foo [
--<!ELEMENT foo EMPTY>
--<!ATTLIST foo
--    xmlns CDATA #FIXED "http://example.com/fooo"
--    xmlns:foo CDATA #REQUIRED
--    foo:info CDATA #IMPLIED>
--]>
--<foo xmlns="http://example.com/foo" xmlns:foo="http://example.com/fo" foo:info="toto"/>
-+<?xml version="1.0"?>
-+<dia:diagram dia:testattr="test"
-+             xmlns:dia="http://www.lysator.liu.se/~alla/dia/"/>
-diff --git a/targets/libxml2/corpus/xmllint/NS2 b/targets/libxml2/corpus/xmllint/NS2
-index d748d1a4..80aaf945 100644
---- a/targets/libxml2/corpus/xmllint/NS2
-+++ b/targets/libxml2/corpus/xmllint/NS2
-@@ -1,13 +1,3 @@
--<!DOCTYPE doc [
--<!ELEMENT doc (#PCDATA | ns:a | ns:b)*>
--<!ATTLIST doc
--          attr  CDATA #REQUIRED
--          xmlns:ns CDATA #IMPLIED>
--<!ELEMENT a EMPTY>
--<!ELEMENT b (#PCDATA)>
--]>
--<ns:doc ns:attr="val" xmlns:ns="http://www.example.org/test/">
--   <ns:a/>
--   <ns:b>first line</ns:b>
--   <ns:b>second line</ns:b>
--</ns:doc>
-+<?xml version="1.0"?>
-+<dia:diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/"
-+             dia:testattr="test"/>
-diff --git a/targets/libxml2/corpus/xmllint/NS3 b/targets/libxml2/corpus/xmllint/NS3
-index f53b0ca9..76bb20d4 100644
---- a/targets/libxml2/corpus/xmllint/NS3
-+++ b/targets/libxml2/corpus/xmllint/NS3
-@@ -1,9 +1,3 @@
--<?xml version="1.0" ?>
--<!DOCTYPE foo [
--<!ELEMENT foo EMPTY>
--<!ATTLIST foo
--    xmlns CDATA #FIXED "http://example.com/fooo"
--    xmlns:foo CDATA #REQUIRED
--    foo:info CDATA #IMPLIED>
--]>
--<foo xmlns="http://example.com/foo" xmlns:foo="http://example.com/fo" foo:info="toto"/>
-+<?xml version="1.0"?>
-+<dia:diagram dia:testattr="test"
-+             xmlns:dia="http://www.lysator.liu.se/~alla/dia/"/>
++compiledb -n make -j$(nproc) all
 diff --git a/targets/lua/build.sh b/targets/lua/build.sh
-index cb1f03d5..eacf52c0 100755
+index cb1f03d5..e171fb54 100755
 --- a/targets/lua/build.sh
 +++ b/targets/lua/build.sh
 @@ -16,10 +16,4 @@ fi
@@ -196,9 +82,9 @@ index cb1f03d5..eacf52c0 100755
 -# build driver
 -make -j$(nproc) lua
 -cp lua "$OUT/"
-+compiledb -n make -j$(nproc) liblua.a lua
++compiledb -n make -j$(nproc) liblua.a
 diff --git a/targets/openssl/build.sh b/targets/openssl/build.sh
-index 965f44cf..1e8dfd7e 100755
+index 965f44cf..7c479a56 100755
 --- a/targets/openssl/build.sh
 +++ b/targets/openssl/build.sh
 @@ -24,17 +24,11 @@ fi
@@ -206,9 +92,8 @@ index 965f44cf..1e8dfd7e 100755
  export LDLIBS="$LIBS"
  
 -./config --debug enable-fuzz-libfuzzer enable-fuzz-afl disable-tests -DPEDANTIC \
--    -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION no-shared no-module \
 +./config --debug disable-tests -DPEDANTIC \
-+    no-shared no-module \
+     -DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION no-shared no-module \
      enable-tls1_3 enable-rc5 enable-md2 enable-ec_nistp_64_gcc_128 enable-ssl3 \
      enable-ssl3-method enable-nextprotoneg enable-weak-ssl-ciphers \
      $CFLAGS -fno-sanitize=alignment $CONFIGURE_FLAGS
@@ -221,20 +106,23 @@ index 965f44cf..1e8dfd7e 100755
 -    fuzzer=$(basename $f)
 -    cp $f "$OUT/"
 -done
-+compiledb -n make LDCMD="$CXX $CXXFLAGS"
++compiledb -n make -j$(nproc) LDCMD="$CXX $CXXFLAGS"
 diff --git a/targets/php/build.sh b/targets/php/build.sh
-index 7207c0b8..2fe4d251 100755
+index 7207c0b8..77745338 100755
 --- a/targets/php/build.sh
 +++ b/targets/php/build.sh
-@@ -32,7 +32,6 @@ LIB_FUZZING_ENGINE="-Wall" ./configure \
-     --enable-fuzzer \
+@@ -29,10 +29,8 @@ unset CXXFLAGS
+ LIB_FUZZING_ENGINE="-Wall" ./configure \
+     --disable-all \
+     --enable-option-checking=fatal \
+-    --enable-fuzzer \
      --enable-exif \
      --enable-phar \
 -    --enable-intl \
      --enable-mbstring \
      --without-pcre-jit \
      --disable-phpdbg \
-@@ -48,18 +47,4 @@ autoreconf -vfi
+@@ -48,18 +46,4 @@ autoreconf -vfi
  make -j$(nproc)
  popd
  
@@ -253,7 +141,7 @@ index 7207c0b8..2fe4d251 100755
 -    mkdir -p "$TARGET/corpus/${fuzzerName}"
 -    cp sapi/fuzzer/corpus/${fuzzerName}/* "$TARGET/corpus/${fuzzerName}/"
 -done
-+compiledb -n make
++compiledb -n make -j$(nproc)
 diff --git a/targets/poppler/build.sh b/targets/poppler/build.sh
 index 973b39c5..d51c83a5 100755
 --- a/targets/poppler/build.sh
@@ -273,32 +161,17 @@ index 973b39c5..d51c83a5 100755
 -    -lopenjp2 -lpng -ltiff -llcms2 -lm -lpthread -pthread
 +compiledb -n make -j$(nproc) poppler poppler-cpp pdfimages pdftoppm
 diff --git a/targets/sqlite3/build.sh b/targets/sqlite3/build.sh
-index 08a3e611..0fe473f9 100755
+index 08a3e611..e4bbf981 100755
 --- a/targets/sqlite3/build.sh
 +++ b/targets/sqlite3/build.sh
-@@ -30,10 +30,4 @@ export CFLAGS="$CFLAGS -DSQLITE_MAX_LENGTH=128000000 \
- 
+@@ -31,9 +31,4 @@ export CFLAGS="$CFLAGS -DSQLITE_MAX_LENGTH=128000000 \
  "$TARGET/repo"/configure --disable-shared --enable-rtree
  make clean
--make -j$(nproc)
+ make -j$(nproc)
 -make sqlite3.c
 -
 -$CC $CFLAGS -I. \
 -    "$TARGET/repo/test/ossfuzz.c" "./sqlite3.o" \
 -    -o "$OUT/sqlite3_fuzz" \
 -    $LDFLAGS $LIBS -pthread -ldl -lm
-+compiledb -n make all sqlite3.c
-diff --git a/targets/sqlite3/fetch.sh b/targets/sqlite3/fetch.sh
-index bce98c32..6e8330f3 100755
---- a/targets/sqlite3/fetch.sh
-+++ b/targets/sqlite3/fetch.sh
-@@ -5,7 +5,4 @@
- # - env TARGET: path to target work dir
- ##
- 
--curl "https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=8c432642572c8c4b" \
--  -o "$OUT/sqlite.tar.gz" && \
--mkdir -p "$TARGET/repo" && \
--tar -C "$TARGET/repo" --strip-components=1 -xzf "$OUT/sqlite.tar.gz"
-\ No newline at end of file
-+git clone -b 'version-3.37.0' --single-branch https://github.com/sqlite/sqlite.git  --depth 1 "$TARGET/repo"
++compiledb -n make sqlite3.c

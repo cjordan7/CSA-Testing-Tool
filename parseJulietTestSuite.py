@@ -42,9 +42,8 @@ class Bug:
 
 
 def getBugsAssociatedWithJulietTestSuite():
-    print("JulietTestSuite: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
-
-    print("JulietTestSuite: Reading sarifs.json")
+    print("JTS: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
+    print("JTS: Reading sarifs.json")
     baseDir = os.path.dirname(os.path.realpath(__file__))
     newPath = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
     newPath = os.path.join(newPath, "sarifs.json")
@@ -97,7 +96,7 @@ def getBugsForIds(bugsMappedInFile, idNs):
 
 
 def addFlagsToFiles(bugsMappedInFile, runIt):
-    print("Adding Codechecker flags to each files")
+    print("JTS: Adding Codechecker flags to each files")
     mappings = getCWECheckerMapping()
     baseDir = os.path.dirname(os.path.realpath(__file__))
 
@@ -162,7 +161,7 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
                     fileToBug.write(tempNewFile)
                     fileToBug.close()
 
-    print("Finished adding Codechecker flags to each files")
+    print("JTS: Finished adding Codechecker flags to each files")
     return toRun, toRunTotal, toRunAndBugs
 
 
@@ -201,10 +200,10 @@ def workFunction(idN):
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
-    print("Creating compilation database (good) for " + idN)
+    print("JTS: Creating compilation database (good) for " + idN)
     path = os.path.join(pathJTS, idN)
 
-    print("Creating compilation database (bad) for " + idN)
+    print("JTS: Creating compilation database (bad) for " + idN)
     addCodeCheckerFlagToCFlags(path + "/Makefile")
 
     makeGood = 'make build CODE_CHECKER_FLAG=-DOMITBAD'
@@ -218,7 +217,7 @@ def workFunction(idN):
 
 
 def interceptBuildForJulietTestSuite(toRun):
-    print("Run codechecker for juliet test suite.")
+    print("JTS: Run codechecker for juliet test suite.")
 
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
     pool.map(workFunction, toRun)
@@ -234,9 +233,8 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
     rates = dict()
 
-    # TODO: Run parallelism
-
     for idN, checkers in toRun.items():
+        print("JTS: Statistics for " + str(idN))
         pathOut = os.path.join(reportPath, idN)
 
         pathOutG = os.path.join(pathOut, "reports_htmlGOOD", "index.html")
@@ -282,6 +280,26 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
     with open('rates.pickle', 'wb') as handle:
         pickle.dump(rates, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def readPickle():
+    with open('rates.pickle', 'rb') as handle:
+        b = pickle.load(handle)
+
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+    array = []
+    for idN, j in b.items():
+        tp += j[1][0]
+        tn += j[1][1]
+        fp += j[1][2]
+        fn += j[1][3]
+
+    array.append([tp/(tp+fn), tn/(tn+fp),
+                  fn/(fn+tp), fp/(fp+tn)])
+    print(array)
 
 
 def filterIds():
@@ -426,6 +444,7 @@ if __name__ == '__main__':
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
         runCodeCheckerStatistics(m, toRunAndBugs)
+        readPickle()
         exit(0)
 
     m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, args.o)
@@ -444,3 +463,4 @@ if __name__ == '__main__':
 
     if(args.s):
         runCodeCheckerStatistics(m, toRunAndBugs)
+        readPickle()

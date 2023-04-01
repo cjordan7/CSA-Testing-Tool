@@ -1,11 +1,44 @@
+import argparse
+from argparse import RawTextHelpFormatter
+
 from runCodeChecker import RunCodeChecker
 from variables import Variables
 from sampleReadCSATable import getCWECheckerMapping
 import os
 
+import subprocess
+
+from collections import OrderedDict
 from itertools import groupby
 
 import json
+
+
+def addCommentsToPatches():
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+
+    dire = os.path.join(baseDir, Variables.DATA_MAGMA_WORKDIR, "targets")
+    direSub = [f.path for f in os.scandir(dire)]
+
+    listPatchesPath = OrderedDict()
+    for lib in direSub:
+        subfolders = [f.path for f in os.scandir(os.path.join(lib, "patches", "bugs"))]
+
+        listPatchesPath[lib] = []
+        for i in subfolders:
+            listPatchesPath[lib].append(i)
+            f = open(i)
+            p = f.readlines()
+            f.close()
+            for line in range(0, len(p)):
+                if("MAGMA_LOG" in p[line]):
+                    p[line] = p[line][:-2] + "//" + i.split("/")[-1] + p[line][-2:]
+
+            f = open(i, "w")
+            f.write("".join(p))
+            f.close()
+
+    return listPatchesPath
 
 
 def readMagmaCWEs():
@@ -34,7 +67,7 @@ def getCheckers(libsCWEs):
     checkers = getCWECheckerMapping()
     mappingLibsCheckers = dict()
 
-    findableBugs = dict()
+    findableBugs = OrderedDict()
     libs = {"PNG": "libpng",
             "SND": "libsndfile",
             "TIF": "libtiff",
@@ -59,7 +92,7 @@ def getCheckers(libsCWEs):
 
 
 def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
-    codeChecker = RunCodeChecker()
+    #codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
 
     # TODO: Change!!!
@@ -68,7 +101,6 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
 
     subfolders = [f.path for f in os.scandir(pathIn) if f.is_dir()]
 
-    # TODO ?? Good idea?
     analyzedFiles = dict()
     for sub in subfolders:
         tp = 0
@@ -81,12 +113,8 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
         lib = sub.split("/")[-1]
         pathReport2 = os.path.join(pathReport, lib+".json")
 
-        print(pathReport2)
-
         f = open(pathReport2)
         js = json.load(f)
-
-        print(len(js["reports"]))
 
         findableBugForLib = findableBugs[lib]
         numberOfBugs = len(findableBugs)
@@ -111,19 +139,11 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
                 fileMeta = k["file"]["original_path"]
                 startLine = k["range"]["start_line"]
                 message = k["message"]
-                print(k["range"])
-                print(startLine)
                 if(fileMeta not in metadata):
                     metadata[fileMeta] = dict()
 
-                if(startLine == 4739):
-                    print(startLine not in metadata[fileMeta])
                 if(startLine not in metadata[fileMeta]):
-                    if(startLine == 4739):
-                        print(startLine not in metadata[fileMeta])
                     metadata[fileMeta][startLine] = [0]
-                    print(metadata[fileMeta][startLine])
-                    print(metadata[fileMeta])
 
                 metadata[fileMeta][startLine].append(message)
             start = lines[0][0]
@@ -131,8 +151,6 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
             i = 0
             #for line, filePath in lines:
             hasFoundBug = False
-            print(h["file"])
-            print("Start ============================================================================")
             for line, filePath in lines:
                 currentFilePath = filePath
                 i += 1
@@ -141,13 +159,10 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
                     break
 
                 if(line in metadata[filePath]):
-                    print(metadata[filePath][line])
                     if(any("Entering loop body" in str(k) for k in metadata[filePath][line])):
-                        print("f")
                         #start = lines[i][0]
                         end = lines[i][0]
                     elif(any("Assuming the condition" in str(k) for k in metadata[filePath][line])):
-                        print("Weird")
                         metadata[filePath][line][0] += 1
                         condition = metadata[filePath][line][0]
                         # TODO: Replace by better check of if
@@ -156,18 +171,13 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
                             start = lines[i][0]
                             end = lines[i][0]
                     elif(any("Calling" in str(k) for k in metadata[filePath][line])):
-                        print("Calling")
-
                         nextFile = lines[i][1]
                         currentFilePath = nextFile
                         if(lines[i][0] in metadata[nextFile] and any("Entered" in str(k) for k in metadata[nextFile][lines[i][0]])):
-                            print("Here.......")
                             metadata[filePath][line][0] += 1
 
                         condition = metadata[filePath][line][0]
-                        print(condition > 0)
                         if(condition > 0 and "Calling" in metadata[filePath][line][condition]):
-                            print("Here2....")
                             start = lines[i][0]
                             end = lines[i][0]
                         else:
@@ -175,25 +185,16 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
                         # TODO Change file
                     elif(any("Entered" in str(i) for i in metadata[filePath][line])):
                             end = lines[i][0]
-
                     else:
-                        print("Up here")
                         start = lines[i][0]
                         end = lines[i][0]
                 else:
-                    print("Up here")
                     end = lines[i][0]
                 print(analyzedFiles[filePath][line-1])
 
                 if(start <= end):
-
-                    print("----------------------------------------------------")
-                    print(str(start) + " " + str(end) + " " + currentFilePath)
                     for m in range(start, end+1):
-                        #print(" Quoi: " + str(len(analyzedFiles[filePath])))
-                        #print(m-1)
                         readLine = analyzedFiles[currentFilePath][m-1].strip()
-                        #print(readLine)
                         if("MAGMA_LOG" in readLine):
                             for bug, checker in findableBugs.items():
                                 if(bug in readLine and checker == h["checker_name"]):
@@ -201,15 +202,9 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
                                     hasFoundBug = True
                 if(hasFoundBug):
                     break
-
-                    # TODO: Read everything from start to end and check magma_log
                 start = end
             if(not hasFoundBug):
                 fp += 1
-
-            print(len(findableBugs))
-            print(h["checker_name"])
-            print(findableBugForLib)
 
         tp = len(bugsFound)
         fn = len(findableBugs) - len(bugsFound)
@@ -218,6 +213,48 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
         print(fp)
 
         bugsFound = set()
+
+
+def createCompilationDatabases(libsPatches, findableBugs):
+    codeChecker = RunCodeChecker()
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    pathIn = os.path.join(baseDir, "workdir", "magma_libs")
+    pathReport = os.path.join(baseDir, Variables.DATA_MAGMA_REPORT_DIR)
+
+    pathIn = os.path.join(baseDir, "workdir", "magma_libs")
+    pathReport = os.path.join(baseDir, Variables.DATA_MAGMA_REPORT_DIR)
+
+    compilationMake = {"libpng": "make libpng16.la",
+                       "libsndfile": "make",
+                       "libtiff": "make",
+                       "libxml2": "make all",
+                       "lua": "make liblua.a lua",
+                       "php": "make",
+                       "poppler": "make poppler poppler-cpp pdfimages pdftoppm",
+                       "openssl": 'make LDCMD="$CXX $CXXFLAGS"',
+                       "sqlite3": "make all sqlite3.c"}
+    for lib, patches in libsPatches.items():
+        libName = lib.split("/")[-1]
+        findableBugsLib = findableBugs[libName]
+
+        pathReport2 = os.path.join(pathReport, libName)
+        pathCC = os.path.join(pathIn, libName, "repo")
+        command = compilationMake[libName]
+        for patch in patches:
+            patchName = patch.split("/")[-1][0:-6]
+
+            if(patchName in findableBugsLib):
+                print("Magma: Creating database for " + libName + " " + patchName)
+                e = subprocess.run("git apply " + patch, shell=True, cwd=pathCC,
+                                   stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
+                if(e.returncode == 0):
+                    codeChecker.compileDB(pathCC, command, patchName)
+                subprocess.run("git apply -R " + patch, shell=True, cwd=pathCC)#,
+                #stdout=subprocess.DEVNULL,
+                #stderr=subprocess.DEVNULL)
+                #stdout=subprocess.DEVNULL,
+                #stderr=subprocess.DEVNULL)
 
 
 def runCodeChecker(mappingLibsCheckers):
@@ -235,6 +272,7 @@ def runCodeChecker(mappingLibsCheckers):
         pathReport2 = os.path.join(pathReport, lib)
         checkers = mappingLibsCheckers[lib]
         pathCC = os.path.join(pathIn, lib, "repo")
+        print(pathCC)
         print(mappingLibsCheckers[lib])
         checkers = mappingLibsCheckers[lib]
         print(pathReport2)
@@ -242,8 +280,64 @@ def runCodeChecker(mappingLibsCheckers):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(prog="parseMagma",
+                                     description="Parse and run the " +
+                                     "Clang Static Analyzer for " +
+                                     "Magma Libraries. " +
+                                     "By default everything is ran " +
+                                     "(creation of compilation database " +
+                                     "and running the codechecker)\n\n" +
+                                     "If you only want to run a few steps, " +
+                                     "then check the option below.",
+                                     epilog="Happy analysis!",
+                                     formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument("-o", action="store_true",
+                        help="write codechecker flags to the test files. " +
+                        "This has to be run once for the CSA analysis " +
+                        "to correctly work.")
+
+    parser.add_argument("-i", action="store_true",
+                        help="run interceptBuild to create the " +
+                        "compilation database for each tests. -o " +
+                        "has to be used prior to the call of this flag.")
+
+    parser.add_argument("-r", action="store_true",
+                        help="run codechecker analysis (CSA analysis) " +
+                        "for each tests. " +
+                        "-i has to have been called prior for " +
+                        "this to work individually")
+
+    parser.add_argument("-b", nargs='+',
+                        help="run the corresponding bug ids. " +
+                        "For example: -b 240782 111866")
+
+    parser.add_argument("-s", action="store_true",
+                        help="run statistics. " +
+                        "For example: -s 240782 111866")
+
+    parser.add_argument("--ignore", action="store_true",
+                        help="run statistics. " +
+                        "Ignore already ran reports")
+
+    args = parser.parse_args()
+
     mappingLibsCheckers, findableBugs = getCheckers(readMagmaCWEs())
 
-    runCodeChecker(mappingLibsCheckers)
-    #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
-    #runCodeCheckerStatistics(m, toRunAndBugs)
+    if(not args.o and not args.i and not args.r and not args.s):
+        libsPatches = addCommentsToPatches()
+        createCompilationDatabases(libsPatches, findableBugs)
+        #runCodeChecker(mappingLibsCheckers)
+        #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
+        exit(0)
+
+    if(args.i):
+        libsPatches = addCommentsToPatches()
+        createCompilationDatabases(libsPatches, findableBugs)
+
+    if(args.r):
+        runCodeChecker(mappingLibsCheckers)
+
+    #if(args.s):
+        #runCodeCheckerStatistics(m, toRunAndBugs)
+        #readPickle()
