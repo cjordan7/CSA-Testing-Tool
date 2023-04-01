@@ -39,6 +39,6 @@ RUN echo "export PATH=\"$PWD/build/CodeChecker/bin:\$PATH\"" >> ~/.bashrc
 RUN source ~/.bashrc
 ADD . .
 
-RUN python3 parseMagma.py -i
-RUN ["chmod", "+x", "createDocker.sh"]
-RUN ./createDocker.sh
+RUN python3 -u parseMagma.py -i
+#RUN ["chmod", "+x", "createDocker.sh"]
+#RUN ./createDocker.sh

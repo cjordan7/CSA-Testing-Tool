@@ -244,12 +244,12 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
             patchName = patch.split("/")[-1][0:-6]
 
             if(patchName in findableBugsLib):
+                print("Magma: Creating database for " + libName + " " + patchName)
                 e = subprocess.run("git apply " + patch, shell=True,
                                    cwd=pathCC,
                                    stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
                 if(e.returncode == 0):
-                    print("Magma: Creating database for " + libName + " " + patchName)
                     codeChecker.compileDB(pathCC, command, patchName)
 
                     # patchName = f.split("/")[-1].split(".")[0][-6:]
@@ -288,7 +288,8 @@ def runCodeChecker(mappingLibsCheckers):
                 checkers = mappingLibsCheckers[lib]
                 patchName = f.split("/")[-1].split(".")[0][-6:]
                 checker = checkers[f.split("/")[-1].split(".")[0][-6:]]
-                codeChecker.runCodeChecker(pathCC, pathReport2, [checker],
+                pathCCPatch = os.path.join(pathIn, lib, "repo", patchName)
+                codeChecker.runCodeChecker(pathCCPatch, pathReport2, [checker],
                                            patchName)
 
 
