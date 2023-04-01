@@ -291,6 +291,9 @@ def runCodeChecker(mappingLibsCheckers):
                 codeChecker.runCodeChecker(pathCC, pathReport2, [checker],
                                            patchName)
 
+                pathReportLib = os.path.join(pathReport, lib)
+                codeChecker.convertHTML(pathReportLib, patchName)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="parseMagma",
