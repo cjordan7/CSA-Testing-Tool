@@ -175,19 +175,3 @@ index 08a3e611..e4bbf981 100755
 -    -o "$OUT/sqlite3_fuzz" \
 -    $LDFLAGS $LIBS -pthread -ldl -lm
 +compiledb -n make sqlite3.c
-diff --git a/targets/sqlite3/fetch.sh b/targets/sqlite3/fetch.sh
-index bce98c32..bc925e40 100755
---- a/targets/sqlite3/fetch.sh
-+++ b/targets/sqlite3/fetch.sh
-@@ -4,8 +4,5 @@
- # Pre-requirements:
- # - env TARGET: path to target work dir
- ##
--
--curl "https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=8c432642572c8c4b" \
--  -o "$OUT/sqlite.tar.gz" && \
--mkdir -p "$TARGET/repo" && \
--tar -C "$TARGET/repo" --strip-components=1 -xzf "$OUT/sqlite.tar.gz"
-\ No newline at end of file
-+
-+git clone --branch 'version-3.37.0' --single-branch https://github.com/sqlite/sqlite.git --depth 1 "$TARGET/repo"
