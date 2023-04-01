@@ -327,10 +327,7 @@ if __name__ == '__main__':
 
     if(not args.o and not args.i and not args.r and not args.s):
         libsPatches = addCommentsToPatches()
-        #createCompilationDatabases(libsPatches, findableBugs)
-        #print(libsPatches)
-        #print(findableBugs)
-
+        createCompilationDatabases(libsPatches, findableBugs)
         runCodeChecker(findableBugs)
         #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
         exit(0)
@@ -340,7 +337,7 @@ if __name__ == '__main__':
         createCompilationDatabases(libsPatches, findableBugs)
 
     if(args.r):
-        runCodeChecker(mappingLibsCheckers)
+        runCodeChecker(findableBugs)
 
     #if(args.s):
         #runCodeCheckerStatistics(m, toRunAndBugs)
