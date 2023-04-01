@@ -70,8 +70,6 @@ class RunCodeChecker():
 
     def runCodeChecker(self, pathIn, reportPath, checkers, goodOrBad):
         enableCheckers = " ".join(["-e " + i for i in checkers])
-
-        print(self.codeCheckerCSAAnalysis(goodOrBad, reportPath))
         subprocess.run(self.codeCheckerCSAAnalysis(goodOrBad, reportPath) +
                        enableCheckers,
                        shell=True, cwd=pathIn)
@@ -79,8 +77,8 @@ class RunCodeChecker():
     def convertHTML(self, reportPath, goodOrBad):
         #TODO: Redirect output to nothing
         #TODO: Export json
-        subprocess.run("CodeChecker parse --export html --output " +
-                       "./reports_html" + goodOrBad + " ./" + goodOrBad,
+        subprocess.run("CodeChecker parse --export json --output " +
+                       "./" + goodOrBad + ".json ./" + goodOrBad,
                        shell=True, cwd=reportPath)
 
     def outputInDierectory(self, directory):

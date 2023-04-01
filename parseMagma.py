@@ -250,7 +250,7 @@ def createCompilationDatabases(libsPatches, findableBugs):
                                    stderr=subprocess.DEVNULL)
                 if(e.returncode == 0):
                     codeChecker.compileDB(pathCC, command, patchName)
-                subprocess.run("git apply -R " + patch, shell=True, cwd=pathCC)#,
+                    subprocess.run("git apply -R " + patch, shell=True, cwd=pathCC)#,
                 #stdout=subprocess.DEVNULL,
                 #stderr=subprocess.DEVNULL)
                 #stdout=subprocess.DEVNULL,
@@ -261,7 +261,6 @@ def runCodeChecker(mappingLibsCheckers):
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
 
-    # TODO: Change!!!
     pathIn = os.path.join(baseDir, "workdir", "magma_libs")
     pathReport = os.path.join(baseDir, Variables.DATA_MAGMA_REPORT_DIR)
 
@@ -272,11 +271,13 @@ def runCodeChecker(mappingLibsCheckers):
         pathReport2 = os.path.join(pathReport, lib)
         checkers = mappingLibsCheckers[lib]
         pathCC = os.path.join(pathIn, lib, "repo")
-        print(pathCC)
-        print(mappingLibsCheckers[lib])
-        checkers = mappingLibsCheckers[lib]
-        print(pathReport2)
-        codeChecker.runCodeChecker(pathCC, pathReport2, checkers, "")
+        for f in os.listdir(pathCC):
+            if f.startswith("compile_command"):
+                checkers = mappingLibsCheckers[lib]
+                patchName = f.split("/")[-1].split(".")[0][-6:]
+                checker = checkers[f.split("/")[-1].split(".")[0][-6:]]
+                codeChecker.runCodeChecker(pathCC, pathReport2, [checker],
+                                           patchName)
 
 
 if __name__ == '__main__':
@@ -326,8 +327,11 @@ if __name__ == '__main__':
 
     if(not args.o and not args.i and not args.r and not args.s):
         libsPatches = addCommentsToPatches()
-        createCompilationDatabases(libsPatches, findableBugs)
-        #runCodeChecker(mappingLibsCheckers)
+        #createCompilationDatabases(libsPatches, findableBugs)
+        #print(libsPatches)
+        #print(findableBugs)
+
+        runCodeChecker(findableBugs)
         #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
         exit(0)
 

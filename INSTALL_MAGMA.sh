@@ -10,7 +10,7 @@ popd
 
 mkdir -p workdir/magma_libs/libpng
 export TARGET=workdir/magma_libs/libpng
-bash workdir/magma/targets/libpng/preinstall.sh
+sudo bash workdir/magma/targets/libpng/preinstall.sh
 bash workdir/magma/targets/libpng/fetch.sh
 bash workdir/magma/targets/libpng/build.sh
 
