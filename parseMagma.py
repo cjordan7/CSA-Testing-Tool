@@ -237,7 +237,6 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
         libName = lib.split("/")[-1]
         findableBugsLib = findableBugs[libName]
 
-        pathReport2 = os.path.join(pathReport, libName)
         pathCC = os.path.join(pathIn, libName, "repo")
         command = compilationMake[libName]
         for patch in patches:
@@ -257,6 +256,7 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
                     checker = checkers[patchName]
 
                     # TODO:...
+                    pathReport2 = os.path.join(pathReport, libName, patchName)
                     codeChecker.runCodeChecker(pathCC, pathReport2,
                                                [checker],
                                                patchName)
@@ -280,7 +280,6 @@ def runCodeChecker(mappingLibsCheckers):
 
     for sub in subfolders:
         lib = sub.split("/")[-1]
-        pathReport2 = os.path.join(pathReport, lib)
         checkers = mappingLibsCheckers[lib]
         pathCC = os.path.join(pathIn, lib, "repo")
         for f in os.listdir(pathCC):
@@ -288,8 +287,8 @@ def runCodeChecker(mappingLibsCheckers):
                 checkers = mappingLibsCheckers[lib]
                 patchName = f.split("/")[-1].split(".")[0][-6:]
                 checker = checkers[f.split("/")[-1].split(".")[0][-6:]]
-                pathCCPatch = os.path.join(pathIn, lib, "repo", patchName)
-                codeChecker.runCodeChecker(pathCCPatch, pathReport2, [checker],
+                pathReport2 = os.path.join(pathReport, lib, patchName)
+                codeChecker.runCodeChecker(pathCC, pathReport2, [checker],
                                            patchName)
 
 
