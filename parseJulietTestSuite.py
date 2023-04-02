@@ -175,11 +175,10 @@ def addCodeCheckerFlagToCFlags(path):
     lines = f.readlines()
     f.close()
 
-    for i in range(0, len(lines)):
-        if("FLAGS" in lines[i] and
-           "CFLAGS" not in lines[i] and
-           "LDFLAGS" not in lines[i]):
-            print(lines[i])
+    #for i in range(0, len(lines)):
+        #if("FLAGS" in lines[i] and
+        #   "CFLAGS" not in lines[i] and
+        #   "LDFLAGS" not in lines[i]):
 
     CODE_CHECKER_FLAG = "CODE_CHECKER_FLAG"
     for i in range(0, len(lines)):
@@ -237,40 +236,38 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
         print("JTS: Statistics for " + str(idN))
         pathOut = os.path.join(reportPath, idN)
 
-        pathOutG = os.path.join(pathOut, "reports_htmlGOOD", "index.html")
-        pathOutB = os.path.join(pathOut, "reports_htmlBAD", "index.html")
+        pathOutG = os.path.join(pathOut, "GOOD.json")
+        pathOutB = os.path.join(pathOut, "BAD.json")
 
         tp = 0
         tn = 0
         fp = 0
         fn = 0
 
-        with open(pathOutB) as fil:
-            soup = BeautifulSoup(fil, 'html.parser')
-
-        trs = soup.find('table').find_all('tr')
+        f = open(pathOutB)
+        d = json.load(f)
+        print(len(d["reports"]))
+        f.close()
 
         fn = toRunAndBugs[idN]
-        for i in trs:
-            tds = i.find_all('td')
-            if(len(tds) > 0):
-                if(tds[-1].text.strip() == "confirmed"):
-                    tp += 1
-                    fn -= 1
-                else:
-                    fp += 1
+        for i in d["reports"]:
+            if(i["review_status"] == "confirmed"):
+                tp += 1
+                fn -= 1
+            else:
+                fp += 1
 
-        with open(pathOutG) as fil:
-            soup = BeautifulSoup(fil, 'html.parser')
-
-        trs = soup.find('table').find_all('tr')
+        f = open(pathOutG)
+        d = json.load(f)
+        print(len(d["reports"]))
+        f.close()
 
         tn = toRunAndBugs[idN]
-        if(len(trs) > 1):
-            fn = len(trs)-1
-            tn = tn - fn
-            if(tn < 0):
-                tn = 0.0
+
+        fn = len(d["reports"])
+        tn = tn - fn
+        if(tn < 0):
+            tn = 0.0
 
         array = [checkers]
         array.append([tp, tn, fp, fn, tp/(tp+fn), tn/(tn+fp),
@@ -278,7 +275,7 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
         rates[idN] = array
 
-    with open('rates.pickle', 'wb') as handle:
+    with open('ratesJTS.pickle', 'wb') as handle:
         pickle.dump(rates, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
@@ -332,22 +329,21 @@ def runCodeChecker3(toRun):
 
         print("Running codechecker analysis (good) for " + idN)
         codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
-        codeChecker.convertHTML(pathOut, "GOOD")
+        codeChecker.convertJSON(pathOut, "GOOD")
 
         pathOutBad = os.path.join(pathOut, "BAD")
         print("Running codechecker analysis (bad) for " + idN)
         codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
-        codeChecker.convertHTML(pathOut, "BAD")
+        codeChecker.convertJSON(pathOut, "BAD")
 
 
 def runCodeChecker(toRun):
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    pool.starmap(runCodeChecker2, toRun.items())
+    pool.starmap(runCodeCheckerHelper, toRun.items())
     pool.close()
 
 
-def runCodeChecker2(idN, checkers):
-    print(idN)
+def runCodeCheckerHelper(idN, checkers):
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
@@ -362,12 +358,12 @@ def runCodeChecker2(idN, checkers):
         #
         #print("Running codechecker analysis (good) for " + idN)
         #codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
-        #codeChecker.convertHTML(pathOut, "GOOD")
+        #codeChecker.convertJSON(pathOut, "GOOD")
         #
         #pathOutBad = os.path.join(pathOut, "BAD")
         #print("Running codechecker analysis (bad) for " + idN)
         #codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
-        #codeChecker.convertHTML(pathOut, "BAD")
+        #codeChecker.convertJSON(pathOut, "BAD")
 
     pathIn = os.path.join(pathJTS, idN)
     pathOut = os.path.join(reportPath, idN)
@@ -375,12 +371,12 @@ def runCodeChecker2(idN, checkers):
 
     print("Running codechecker analysis (good) for " + idN)
     codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
-    codeChecker.convertHTML(pathOut, "GOOD")
+    codeChecker.convertJSON(pathOut, "GOOD")
 
     pathOutBad = os.path.join(pathOut, "BAD")
     print("Running codechecker analysis (bad) for " + idN)
     codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
-    codeChecker.convertHTML(pathOut, "BAD")
+    codeChecker.convertJSON(pathOut, "BAD")
 
 
 if __name__ == '__main__':
@@ -430,7 +426,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
-    print(len(bugsMappedInFile))
     if(args.b is not None):
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
 
@@ -452,8 +447,6 @@ if __name__ == '__main__':
     if(args.ignore is not None):
         for k in filterIds():
             m.pop(k, None)
-
-    print(len(m))
 
     if(args.i):
         interceptBuildForJulietTestSuite(m.keys())

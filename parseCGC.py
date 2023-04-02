@@ -169,7 +169,7 @@ def interceptBuildForJulietTestSuite(toRun):
 
 def applyPatch():
     baseDir = os.path.dirname(os.path.realpath(__file__))
-    print(baseDir)
+    #print(baseDir)
     pathCGC = os.path.join(baseDir, Variables.DATA_CGC_WORKDIR)
 
     pathPatch = os.path.join(baseDir, Variables.CGC_PATCH_PATH)
@@ -188,8 +188,13 @@ def getBugsForIds(mappings, idNs):
     return returnDict
 
 
-def updateMakefile(mappings):
-    print(mappings)
+def createCompilationDatabases(mappings):
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    pool.map(createCompilationDatabasesHelper, mappings)
+    pool.close()
+
+
+def createCompilationDatabases2(mappings):
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathBuildSH = os.path.join(baseDir, Variables.DATA_FOLDER)
     pathBuildSH = os.path.join(pathBuildSH, "cgcBuild.sh")
@@ -205,18 +210,20 @@ def updateMakefile(mappings):
             subfolders2 = [f.path for f in os.scandir(key) if "cb" in f.path]
 
             for subf in subfolders2:
-                print(subf)
+                name = subf.split("/")[-2] + "/" + subf.split("/")[-1]
+                print("CGC: Creating compilation database for " + name)
                 if("cb" in subf):
                     subprocess.run("bash " + pathBuildSH +
                                    " TargetName cc", shell=True, cwd=subf)
-                    runCodeChecker.compileDB(subf, "make", "")
+                    runCodeChecker.runInterceptBuild(subf, "make", "")
 
         else:
+            name = os.path.basename(os.path.normpath(key))
+            print("CGC: Creating compilation database for " + name)
             subprocess.run("bash " + pathBuildSH +
                            " TargetName cc", shell=True, cwd=key)
-            runCodeChecker.compileDB(subf, "make", "")
-            runCodeChecker.runCodeChecker(key, pathOutGood, checkers, "reports")
-
+            #runCodeChecker.compileDB(key, "make", "")
+            runCodeChecker.runInterceptBuild(key, "make", "")
         f = open(makefilePath)
         f.close
 
@@ -227,10 +234,80 @@ def updateMakefile(mappings):
             if("include" in lines[lineN]):
                 lines[lineN] = "# " + lines[lineN]
 
-        #f = open(makefilePath, "w")
-        #f.write("".join(lines))
-        #f.close
-        #raise NotImplementedError
+
+def createCompilationDatabasesHelper(key):
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    pathBuildSH = os.path.join(baseDir, Variables.DATA_FOLDER)
+    pathBuildSH = os.path.join(pathBuildSH, "cgcBuild.sh")
+    runCodeChecker = RunCodeChecker()
+
+    makefilePath = os.path.join(key, "Makefile")
+
+    cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
+               "NRFIN_00006", "YAN01_00009"]
+
+    if(any(i in key for i in cbsOnly)):
+        subfolders2 = [f.path for f in os.scandir(key) if "cb" in f.path]
+
+        for subf in subfolders2:
+            name = subf.split("/")[-2] + "/" + subf.split("/")[-1]
+            print("CGC: Creating compilation database for " + name)
+            if("cb" in subf):
+                subprocess.run("bash " + pathBuildSH +
+                               " TargetName cc", shell=True, cwd=subf)
+                runCodeChecker.runInterceptBuild(subf, "make", "")
+
+    else:
+        name = os.path.basename(os.path.normpath(key))
+        print("CGC: Creating compilation database for " + name)
+        subprocess.run("bash " + pathBuildSH +
+                       " TargetName cc", shell=True, cwd=key)
+        #runCodeChecker.compileDB(key, "make", "")
+        runCodeChecker.runInterceptBuild(key, "make", "")
+    #f = open(makefilePath)
+    #f.close
+
+    #f = open(makefilePath, "r")
+    #lines = f.readlines()
+    #f.close
+    #for lineN in range(0, len(lines)):
+    #    if("include" in lines[lineN]):
+    #        lines[lineN] = "# " + lines[lineN]
+
+
+def runCodeChecker(mappings):
+    # print(mappings)
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    runCodeChecker = RunCodeChecker()
+    cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
+               "NRFIN_00006", "YAN01_00009"]
+
+    pathReport = os.path.join(baseDir, Variables.DATA_CGC_REPORT_DIR)
+
+    for key, checkers in mappings.items():
+        if(any(i in key for i in cbsOnly)):
+            subfolders2 = [f.path for f in os.scandir(key) if "cb" in f.path]
+
+            for subf in subfolders2:
+                name = subf.split("/")[-2] + "_" + subf.split("/")[-1]
+                print("CGC: Run codechecker for " + name)
+                pathReport2 = os.path.join(pathReport, name)
+                print("subf " + subf)
+                print("Path Report " + pathReport2)
+                if(len(checkers) != 0):
+                    runCodeChecker.runCodeChecker(subf, pathReport2, checkers, "")
+                    runCodeChecker.convertJSON(pathReport, name)
+                print("=================================================")
+        else:
+            name = os.path.basename(os.path.normpath(key))
+            print("CGC: Run codechecker for " + name)
+            pathReport2 = os.path.join(pathReport, name)
+            print("Key " + key)
+            print("PathReport " + pathReport2)
+            if(len(checkers) != 0):
+                runCodeChecker.runCodeChecker(key, pathReport2, checkers, "")
+                runCodeChecker.convertJSON(pathReport, name)
+            print("=================================================")
 
 
 if __name__ == '__main__':
@@ -259,6 +336,12 @@ if __name__ == '__main__':
                         "compilation database for each tests. -o " +
                         "has to be used prior to the call of this flag.")
 
+    parser.add_argument("-r", action="store_true",
+                        help="run codechecker analysis (CSA analysis) " +
+                        "for each tests. " +
+                        "-i has to have been called prior for " +
+                        "this to work individually")
+
     parser.add_argument("-b", nargs='+',
                         help="run the corresponding bug ids. " +
                         "For example: -b KPRCA_00048 NRFIN_00042")
@@ -268,13 +351,24 @@ if __name__ == '__main__':
                         "For example: -s KPRCA_00048 NRFIN_00042")
 
     args = parser.parse_args()
+
     mappings = {}
+
     if(args.b is not None):
         mappings = getBugsForIds(getMappings(), args.b)
     else:
         mappings = getMappings()
 
-    print(mappings)
+    if(not args.o and not args.i and not args.r and not args.s):
+        applyPatch()
+        createCompilationDatabases(mappings)
+        runCodeChecker(mappings)
+        exit(0)
 
-    applyPatch()
-    updateMakefile(mappings)
+    # print(mappings)
+    if(args.i):
+        applyPatch()
+        createCompilationDatabases(mappings)
+
+    if(args.r):
+        runCodeChecker(mappings)

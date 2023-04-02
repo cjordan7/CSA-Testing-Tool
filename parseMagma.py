@@ -292,7 +292,7 @@ def runCodeChecker(mappingLibsCheckers):
                                            patchName)
 
                 pathReportLib = os.path.join(pathReport, lib)
-                codeChecker.convertHTML(pathReportLib, patchName)
+                codeChecker.convertJSON(pathReportLib, patchName)
 
 
 if __name__ == '__main__':

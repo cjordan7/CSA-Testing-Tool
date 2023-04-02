@@ -19,10 +19,10 @@ class RunCodeChecker():
 #TODO: codechecker found line (FP) ? buggy line ?
 #TODO: statistics (FP, TP,..., rates)
 
-    def codeCheckerCSAAnalysis(self, goodOrBad, outputPath):
+    def codeCheckerCSAAnalysis(self, CBextraName, outputPath):
         # Use -d to disable checker class
-        return "CodeChecker analyze compile_commands"+ \
-            goodOrBad + ".json " +\
+        return "CodeChecker analyze compile_commands" + \
+            CBextraName + ".json " +\
             "--analyzers clangsa  --ctu -d core -d alpha -d cplusplus -d " +\
             "nullability -d optin -d deadcode -d " +\
             "security -d unix -d valist  -d security.FloatLoopCounter -d " +\
@@ -68,17 +68,17 @@ class RunCodeChecker():
         # Create compilation database for CSA
         self.runDBCommandAndRenameJSON(interceptBuild, path, name)
 
-    def runCodeChecker(self, pathIn, reportPath, checkers, goodOrBad):
+    def runCodeChecker(self, pathIn, reportPath, checkers, CBextraName):
         enableCheckers = " ".join(["-e " + i for i in checkers])
-        subprocess.run(self.codeCheckerCSAAnalysis(goodOrBad, reportPath) +
+        subprocess.run(self.codeCheckerCSAAnalysis(CBextraName, reportPath) +
                        enableCheckers,
                        shell=True, cwd=pathIn)
 
-    def convertHTML(self, reportPath, goodOrBad):
+    def convertJSON(self, reportPath, extraName):
         #TODO: Redirect output to nothing
         #TODO: Export json
         subprocess.run("CodeChecker parse --export json --output " +
-                       "./" + goodOrBad + ".json ./" + goodOrBad,
+                       "./" + extraName + ".json ./" + extraName,
                        shell=True, cwd=reportPath)
 
     def outputInDierectory(self, directory):

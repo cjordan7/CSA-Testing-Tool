@@ -2,8 +2,6 @@
 SCRIPTPATH=$(dirname $(readlink -f "$0"))
 LIBCGC="$SCRIPTPATH/../workdir/cgc/lib/libcgc"
 
-echo $LIBCGC
-
 if [ ! -d src ]; then
     echo "Multi-process CBs not supported..." >&2
     exit 1
@@ -28,7 +26,8 @@ CFLAGS="-fno-builtin -fno-stack-protector"
 LIBSTDCPP=""
 CC_CFLAGS=""
 
-echo "all:" > Makefile
+echo "CC=gcc" > Makefile
+echo "all:" >> Makefile
 echo "	rm -fR obj" >> Makefile
 echo "	mkdir obj" >> Makefile
 
@@ -37,9 +36,9 @@ for src in src/*.c src/*.cc lib/*.c lib/*.cc; do
     [ -f "$src" ] || continue
 #    echo "$* -c $src"
     case $src in
-        *.cc) CC_CFLAGS="$@ ${CFLAGS}"
+        *.cc) CC_CFLAGS="\$(CC) ${CFLAGS}"
               LIBSTDCPP="-lstdc++" ;;
-        *.c) CC_CFLAGS="$@ ${CFLAGS_CONLY} ${CFLAGS}" ;;
+        *.c) CC_CFLAGS="\$(CC) ${CFLAGS_CONLY} ${CFLAGS}" ;;
     esac
 
 echo "	${CC_CFLAGS} ${DMACRO} -Iinclude -Ilib -I$LIBCGC -c -o ""obj/`basename "$src" | sed 's,[.][^.]*$,.o,'`"" $src" >> Makefile
