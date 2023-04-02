@@ -1,18 +1,14 @@
+import json
+import multiprocessing
+import os
+import pickle
+
 import argparse
 from argparse import RawTextHelpFormatter
-
-import json
-import os
 
 from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
-
-from bs4 import BeautifulSoup
-
-import pickle
-
-import multiprocessing
 
 
 # This class represent only a bug (CWE) at a precise line of a file
@@ -175,11 +171,6 @@ def addCodeCheckerFlagToCFlags(path):
     lines = f.readlines()
     f.close()
 
-    #for i in range(0, len(lines)):
-        #if("FLAGS" in lines[i] and
-        #   "CFLAGS" not in lines[i] and
-        #   "LDFLAGS" not in lines[i]):
-
     CODE_CHECKER_FLAG = "CODE_CHECKER_FLAG"
     for i in range(0, len(lines)):
         if("CFLAGS =" in lines[i] and
@@ -211,9 +202,6 @@ def workFunction(idN):
     codeChecker.compileDB(path, makeGood, "GOOD")
     codeChecker.compileDB(path, makeBad, "BAD")
 
-    # codeChecker.runInterceptBuild(path, makeGood, "GOOD")
-    # codeChecker.runInterceptBuild(path, makeBad, "BAD")
-
 
 def interceptBuildForJulietTestSuite(toRun):
     print("JTS: Run codechecker for juliet test suite.")
@@ -221,8 +209,6 @@ def interceptBuildForJulietTestSuite(toRun):
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
     pool.map(workFunction, toRun)
     pool.close()
-
-# def runCodeCheckerStatisticsSeq(toRun, toRunAndBugs)
 
 
 def runCodeCheckerStatistics(toRun, toRunAndBugs):
@@ -264,7 +250,7 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
         tn = toRunAndBugs[idN]
 
-        fn = len(d["reports"])
+        fn += len(d["reports"])
         tn = tn - fn
         if(tn < 0):
             tn = 0.0

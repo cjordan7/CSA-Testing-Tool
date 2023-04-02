@@ -1,5 +1,8 @@
+
+import json
 import multiprocessing
 import os
+import pickle
 import re
 import subprocess
 
@@ -130,13 +133,14 @@ def getMappings():
     dictio = getCWEs()
     mapping = getCWECheckerMapping()
     returnDictio = dict()
-
     for key, items in dictio.items():
         checkers = set()
+        number = 0
         for i in items:
             if(i in mapping):
+                number += 1
                 checkers.add(mapping[i])
-        returnDictio[key] = checkers
+        returnDictio[key] = (checkers, number)
 
     return returnDictio
 
@@ -169,7 +173,6 @@ def interceptBuildForJulietTestSuite(toRun):
 
 def applyPatch():
     baseDir = os.path.dirname(os.path.realpath(__file__))
-    #print(baseDir)
     pathCGC = os.path.join(baseDir, Variables.DATA_CGC_WORKDIR)
 
     pathPatch = os.path.join(baseDir, Variables.CGC_PATCH_PATH)
@@ -200,7 +203,7 @@ def createCompilationDatabases2(mappings):
     pathBuildSH = os.path.join(pathBuildSH, "cgcBuild.sh")
     runCodeChecker = RunCodeChecker()
 
-    for key, checkers in mappings.items():
+    for key, tupl in mappings.items():
         makefilePath = os.path.join(key, "Makefile")
 
         cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
@@ -222,7 +225,6 @@ def createCompilationDatabases2(mappings):
             print("CGC: Creating compilation database for " + name)
             subprocess.run("bash " + pathBuildSH +
                            " TargetName cc", shell=True, cwd=key)
-            #runCodeChecker.compileDB(key, "make", "")
             runCodeChecker.runInterceptBuild(key, "make", "")
         f = open(makefilePath)
         f.close
@@ -284,30 +286,100 @@ def runCodeChecker(mappings):
 
     pathReport = os.path.join(baseDir, Variables.DATA_CGC_REPORT_DIR)
 
-    for key, checkers in mappings.items():
+    for key, tupl in mappings.items():
+        checkers = tupl[0]
         if(any(i in key for i in cbsOnly)):
             subfolders2 = [f.path for f in os.scandir(key) if "cb" in f.path]
 
             for subf in subfolders2:
                 name = subf.split("/")[-2] + "_" + subf.split("/")[-1]
-                print("CGC: Run codechecker for " + name)
                 pathReport2 = os.path.join(pathReport, name)
-                print("subf " + subf)
-                print("Path Report " + pathReport2)
                 if(len(checkers) != 0):
+                    print("CzGC: Run codechecker for " + name)
                     runCodeChecker.runCodeChecker(subf, pathReport2, checkers, "")
                     runCodeChecker.convertJSON(pathReport, name)
-                print("=================================================")
         else:
             name = os.path.basename(os.path.normpath(key))
-            print("CGC: Run codechecker for " + name)
             pathReport2 = os.path.join(pathReport, name)
-            print("Key " + key)
-            print("PathReport " + pathReport2)
             if(len(checkers) != 0):
+                print("CGC: Run codechecker for " + name)
                 runCodeChecker.runCodeChecker(key, pathReport2, checkers, "")
                 runCodeChecker.convertJSON(pathReport, name)
-            print("=================================================")
+
+
+def runCodeCheckerStatistics(mappings):
+    baseDir = os.path.dirname(os.path.realpath(__file__))
+    reportPath = os.path.join(baseDir,
+                              Variables.DATA_CGC_REPORT_DIR)
+
+    rates = dict()
+
+    cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
+               "NRFIN_00006", "YAN01_00009"]
+    for idN, tupl in mappings.items():
+        checkers = tupl[1]
+        name = idN.split("/")[-1]
+        if(any(i in idN for i in cbsOnly)):
+            name = idN.split("/")[-2] + "_" + name
+        name += ".json"
+        pathOut = os.path.join(reportPath, name)
+        print(pathOut)
+        print(idN)
+        print("JTS: Statistics for " + name)
+        print(name)
+        tp = 0
+        tn = 0
+        fp = 0
+        fn = 0
+
+        if(not os.path.isfile(pathOut)):
+            continue
+        f = open(pathOut)
+        d = json.load(f)
+        print(len(d["reports"]))
+        f.close()
+
+        fn = len(d["reports"]) + tupl[1]
+
+        for i in d["reports"]:
+            if(i["review_status"] == "confirmed"):
+                tp += 1
+                fn -= 1
+                print("euhh")
+            else:
+                fp += 1
+
+        array = [checkers]
+        # TODO: Check this out
+        array.append([tp, tn, fp, fn,
+                      tp/(tp+fn),
+                      fn/(fn+tp),
+                      fp/(tp+tn+fp+fn)])
+
+        rates[idN] = array
+
+    with open('ratesCGC.pickle', 'wb') as handle:
+        pickle.dump(rates, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def readPickle():
+    with open('ratesCGC.pickle', 'rb') as handle:
+        b = pickle.load(handle)
+
+    tp = 0
+    tn = 0
+    fp = 0
+    fn = 0
+    array = []
+    for idN, j in b.items():
+        tp += j[1][0]
+        tn += j[1][1]
+        fp += j[1][2]
+        fn += j[1][3]
+
+    array.append([tp/(tp+fn), tn/(tn+fp),
+                  fn/(fn+tp), fp/(fp+tn)])
+    print(array)
 
 
 if __name__ == '__main__':
@@ -372,3 +444,7 @@ if __name__ == '__main__':
 
     if(args.r):
         runCodeChecker(mappings)
+
+    if(args.s):
+        runCodeCheckerStatistics(mappings)
+        readPickle()
