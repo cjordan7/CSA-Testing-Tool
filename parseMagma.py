@@ -356,8 +356,8 @@ if __name__ == '__main__':
     mappingLibsCheckers, findableBugs = getCheckers(readMagmaCWEs())
 
     runOnlyLibs = []
-    if(args.b is not None):
-        runOnlyLibs = args.b
+    if(args.l is not None):
+        runOnlyLibs = args.l
 
 
     if(not args.o and not args.i and not args.r and not args.s):
