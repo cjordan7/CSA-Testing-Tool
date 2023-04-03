@@ -247,12 +247,12 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
             patchName = patch.split("/")[-1][0:-6]
 
             if(patchName in findableBugsLib):
-                print("Magma: Creating database for " + libName + " " + patchName)
                 e = subprocess.run("git apply " + patch, shell=True,
                                    cwd=pathCC,
                                    stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
                 if(e.returncode == 0):
+                    print("Magma: Creating database for " + libName + " " + patchName)
                     if(libName == "php"):
                         codeChecker.interceptBuild(pathCC, command, patchName)
                     else:
