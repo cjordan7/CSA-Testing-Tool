@@ -258,7 +258,6 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                     else:
                         codeChecker.compileDB(pathCC, command, patchName)
 
-                    patchName = f.split("/")[-1].split(".")[0][-6:]
                     checkers = findableBugs[libName]
                     checker = checkers[patchName]
 
