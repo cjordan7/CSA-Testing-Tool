@@ -14,6 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 options = Options()
 
+
 def timeout(number=3):
     try:
         element_present = EC.presence_of_element_located((By.ID, 'main'))
@@ -47,6 +48,14 @@ def timeout(number=3):
 
 # Get either bissected commit or patch "commit -1"
 
+def timeout(number=3):
+    try:
+        element_present = EC.presence_of_element_located((By.ID, 'main'))
+        WebDriverWait(driver, number).until(element_present)
+    except TimeoutException:
+        print("")
+    finally:
+        print("")
 
 # TODO: Get path according to current dir
 # TODO: curl chromdriver
@@ -73,11 +82,31 @@ for row in tableData:
     columnSize = len(tableRow)
 
     # Text first column
-    print(tableRow[0].text)
+    title = tableRow[0].text
+    print(tableRow[0].find_element_by_tag_name("a").text)
+    print(title)
 
     # Link firt column
     print(tableRow[0].find_element_by_tag_name("a").get_attribute("href"))
+    temp = tableRow[0].find_element_by_tag_name("a").get_attribute("href")
+    driver.execute_script('''window.open("'''+temp+'''","_blank");''')
+    driver.switch_to_window(driver.window_handles[1])
+    timeout(2)
+    for e in driver.find_elements(By.XPATH, "html/body"):
+        text = e.text
+        lines = text.splitlines()
+        index = lines.index(title)
+        print(text.splitlines())
+        print(index)
 
+
+    driver.close()
+
+
+
+
+
+    driver.switch_to_window(driver.window_handles[0])
     # Text last column
     print(tableRow[-1].text)
 
@@ -89,5 +118,5 @@ for row in tableData:
         print("Warning: Ignoring because there are no links for the fix")
 
     # TODO: Remove
-    if(rows == 3):
+    if(rows == 1):
         break

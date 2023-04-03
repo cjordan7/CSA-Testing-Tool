@@ -241,7 +241,12 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
 
         findableBugsLib = findableBugs[libName]
 
-        pathCC = os.path.join(pathIn, libName, "repo")
+        if(libName == "poppler" or libName == "sqlite3"):
+            pathCC = os.path.join(pathIn, libName, "work")
+            if(libName == "poppler"):
+                pathCC = os.path.join(pathCC, "poppler")
+        else:
+            pathCC = os.path.join(pathIn, libName, "repo")
         command = compilationMake[libName]
         for patch in patches:
             patchName = patch.split("/")[-1][0:-6]
@@ -252,8 +257,9 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                                    stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
                 if(e.returncode == 0):
-                    print("Magma: Creating database for " + libName + " " + patchName)
-                    if(libName == "php"):
+                    print("Magma: Creating database for " +
+                          libName + " " + patchName)
+                    if(libName == "php" or libName == "openssl"):
                         codeChecker.interceptBuild(pathCC, command, patchName)
                     else:
                         codeChecker.compileDB(pathCC, command, patchName)
@@ -261,20 +267,17 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                     checkers = findableBugs[libName]
                     checker = checkers[patchName]
 
-                    # TODO:...
                     pathReport2 = os.path.join(pathReport, libName, patchName)
                     codeChecker.runCodeChecker(pathCC, pathReport2,
                                                [checker],
                                                patchName)
                     subprocess.run("git apply -R " + patch, shell=True,
-                                   cwd=pathCC)#,
+                                   cwd=pathCC)
                     pathReportLib = os.path.join(pathReport, libName)
                     codeChecker.convertJSON(pathReportLib, patchName)
-
-                #stdout=subprocess.DEVNULL,
-                #stderr=subprocess.DEVNULL)
-                #stdout=subprocess.DEVNULL,
-                #stderr=subprocess.DEVNULL)
+                else:
+                    print("Magma: Patch " + patchName +
+                          " can't be applied for " + libName)
 
 
 def runCodeChecker(mappingLibsCheckers):
