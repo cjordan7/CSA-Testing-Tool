@@ -269,6 +269,8 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                                                patchName)
                     subprocess.run("git apply -R " + patch, shell=True,
                                    cwd=pathCC)#,
+                    pathReportLib = os.path.join(pathReport, lib)
+                    codeChecker.convertJSON(pathReportLib, patchName)
 
                 #stdout=subprocess.DEVNULL,
                 #stderr=subprocess.DEVNULL)
