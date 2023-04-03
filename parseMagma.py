@@ -249,7 +249,10 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
                                    stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
                 if(e.returncode == 0):
-                    codeChecker.compileDB(pathCC, command, patchName)
+                    if(libName == "php"):
+                        codeChecker.interceptBuild(pathCC, command, patchName)
+                    else:
+                        codeChecker.compileDB(pathCC, command, patchName)
 
                     # patchName = f.split("/")[-1].split(".")[0][-6:]
                     checkers = findableBugs[libName]
