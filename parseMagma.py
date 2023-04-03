@@ -236,7 +236,7 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                        "sqlite3": "make all sqlite3.c"}
     for lib, patches in libsPatches.items():
         libName = lib.split("/")[-1]
-        if(libName not in runOnlyLibs):
+        if(runOnlyLibs != [] and libName not in runOnlyLibs):
             continue
 
         findableBugsLib = findableBugs[libName]
@@ -258,7 +258,7 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                     else:
                         codeChecker.compileDB(pathCC, command, patchName)
 
-                    # patchName = f.split("/")[-1].split(".")[0][-6:]
+                    patchName = f.split("/")[-1].split(".")[0][-6:]
                     checkers = findableBugs[libName]
                     checker = checkers[patchName]
 
@@ -269,7 +269,7 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                                                patchName)
                     subprocess.run("git apply -R " + patch, shell=True,
                                    cwd=pathCC)#,
-                    pathReportLib = os.path.join(pathReport, lib)
+                    pathReportLib = os.path.join(pathReport, patchName)
                     codeChecker.convertJSON(pathReportLib, patchName)
 
                 #stdout=subprocess.DEVNULL,
