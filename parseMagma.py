@@ -215,7 +215,8 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
         bugsFound = set()
 
 
-def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
+def createCompilationDatabases(mappingLibsCheckers, libsPatches,
+                               findableBugsm, runOnlyLibs):
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathIn = os.path.join(baseDir, "workdir", "magma_libs")
@@ -235,6 +236,9 @@ def createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs):
                        "sqlite3": "make all sqlite3.c"}
     for lib, patches in libsPatches.items():
         libName = lib.split("/")[-1]
+        if(libName not in runOnlyLibs):
+            continue
+
         findableBugsLib = findableBugs[libName]
 
         pathCC = os.path.join(pathIn, libName, "repo")
@@ -327,6 +331,10 @@ if __name__ == '__main__':
                         "-i has to have been called prior for " +
                         "this to work individually")
 
+    parser.add_argument("-l", nargs='+',
+                        help="run the corresponding libs. " +
+                        "For example: -l libpng sqlite3")
+
     parser.add_argument("-b", nargs='+',
                         help="run the corresponding bug ids. " +
                         "For example: -b 240782 111866")
@@ -343,16 +351,23 @@ if __name__ == '__main__':
 
     mappingLibsCheckers, findableBugs = getCheckers(readMagmaCWEs())
 
+    runOnlyLibs = []
+    if(args.b is not None):
+        runOnlyLibs = args.b
+
+
     if(not args.o and not args.i and not args.r and not args.s):
         libsPatches = addCommentsToPatches()
-        createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs)
+        createCompilationDatabases(mappingLibsCheckers, libsPatches,
+                                   findableBugs, runOnlyLibs)
         #runCodeChecker(findableBugs)
         #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
         exit(0)
 
     if(args.i):
         libsPatches = addCommentsToPatches()
-        createCompilationDatabases(mappingLibsCheckers, libsPatches, findableBugs)
+        createCompilationDatabases(mappingLibsCheckers, libsPatches,
+                                   findableBugs, runOnlyLibs)
 
     #if(args.r):
         #runCodeChecker(findableBugs)

@@ -160,6 +160,9 @@ pip install compiledb
 echo "export PATH=\"`python3 -m site --user-base`/bin:\$PATH\"" >> ~/.bashrc
 source ~/.bashrc
 
+# For intercept-build
+pip install scan-build
+
 # Install nodejs dependency for web. In case of Debian/Ubuntu you can use the
 # following commands. For more information see the official docs:
 # https://nodejs.org/en/download/package-manager/
