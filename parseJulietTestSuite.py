@@ -5,13 +5,10 @@ import pickle
 
 import argparse
 from argparse import RawTextHelpFormatter
-from itertools import repeat
 
+from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
-
-import runCodeChecker
-
 
 export = "html"
 
@@ -394,14 +391,13 @@ def callCodeChecker(toRun):
     print(temp)
     # raise NotImplementedError
 
-    pool = multiprocessing.Pool(1)#multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(multiprocessing.cpu_count())
 
     pool.starmap(callCodeCheckerHelper, temp)
     pool.close()
 
 
 def callCodeCheckerHelper(idN, checkers, export):
-    #raise Exception(export)
     codeChecker = RunCodeChecker(export, extraCommands="--file *CWE*")
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
