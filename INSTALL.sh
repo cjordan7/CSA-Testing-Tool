@@ -23,7 +23,6 @@ echo 'export PATH="/usr/lib/ccache:$PATH"' | tee -a ~/.bashrc
 # Source bashrc to test the new PATH
 source ~/.bashrc && echo $PATH
 
-
 # Install ninja
 sudo apt-get install -y ninja-build
 
@@ -35,30 +34,10 @@ sudo apt install -y curl
 
 pip install argparse
 
-# File system
-# . data
-# >. linux-syzbot
-# >. csaTable
-# >.
-# . workdir
-# >. codechecker
-# >. llvm-project
-# >. julietTestSuite
-# >. cgc
-# >. magma
-# >. linux
-# . reports
-# >. julietTestSuite
-# >. cgc
-# >. magma
-# >. linux
-
 # Special variables
-
-# Change all of this to make it more extensible
 declare -a arr=("linux-syzbot" "llvm-project" "julietTestSuite" "cgc" "magma" "linux")
 
-temp="class Variables():"
+temp="# Automatically Generated file. DO NOT CHANGE!. \n\n\nclass Variables():"
 for i in "${arr[@]}"
 do
     # Create directories
@@ -106,7 +85,7 @@ debug=$1
 if [ "$debug" = "debug" ]; then
   # Clone LLVM. We only clone the tags we are interested in.
   # We don't need to clone all commits as we only use the last version
-  git clone -b 'llvmorg-15.0.6' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
+  git clone -b 'llvmorg-15.0.7' --single-branch https://github.com/llvm/llvm-project.git --depth 1 workdir/llvm-project
 
 
   # TODO: Give parameter to build from source

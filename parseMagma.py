@@ -212,8 +212,6 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
         print(fn)
         print(fp)
 
-        bugsFound = set()
-
 
 def createCompilationDatabases(mappingLibsCheckers, libsPatches,
                                findableBugsm, runOnlyLibs):

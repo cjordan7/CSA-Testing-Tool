@@ -11,6 +11,10 @@ from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
 
+# TODO: Remove
+import random
+
+
 # This class represent only a bug (CWE) at a precise line of a file
 class Bug:
     def __init__(self, cwe, line, internetLink, idN, fileName, isOnlyWindows):
@@ -84,6 +88,12 @@ def getBugsAssociatedWithJulietTestSuite():
 
 def getBugsForIds(bugsMappedInFile, idNs):
     returnDict = dict()
+    temp = [a[0].idN.split("-")[0] for a in bugsMappedInFile.values()]
+    diff = set(idNs).difference(temp)
+    if(len(diff) > 0):
+        raise Exception("ID(s): " + " ".join(diff) + " don't belong" +
+                        " to the Juliet Test Suite. Check for correctness.")
+
     for filePath, bugs in bugsMappedInFile.items():
         if(any(i == bugs[0].idN.split("-")[0] for i in idNs)):
             returnDict[filePath] = bugs
@@ -117,6 +127,7 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
                         toRunAndBugs[bug.idN] += 1
                     else:
                         toRun[bug.idN] = set()
+
                         toRun[bug.idN].add(mappings[bug.cwe])
                         toRunAndBugs[bug.idN] = 1
 
@@ -136,6 +147,7 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
             # Create the comment:
             # // codechecker_confirmed [checkers] This is a bug."
             if(len(array) >= 1 and runIt):
+                print("JTS: Writing codechecker flag to " + bug.idN)
                 newPath = os.path.join(baseDir,
                                        Variables.DATA_JULIETTESTSUITE_WORKDIR)
                 newPath = os.path.join(newPath, filename)
@@ -143,16 +155,54 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
                 lines = fileToBug.readlines()
                 fileToBug.close()
 
-                if("// codechecker_confirmed" not in "".join(lines)):
+                if(len(lines) == 0):
+                    print("WARNING: Empty file " + newPath)
+
+                if("// codechecker_confirmed" not in "".join(lines) and
+                   len(lines) > 0):
+                    tempCheckers = ""
                     for tupl in array:
                         line, checkers = tupl
                         t = ", ".join(checkers)
+                        tempCheckers += t
                         t = "// codechecker_confirmed [" + t + "] This is a bug.\n"
 
                         if(t != lines[line-1]):
                             lines.insert(line-1, t)
 
-                    tempNewFile = "".join(lines)
+                    lines2 = []
+                    temp = False
+                    for i in range(0, len(lines)):
+                        # Append before line
+                        if(i < len(lines) - 1 and "unix.Malloc" in tempCheckers and
+                           "free" in lines[i]):
+                            lines2.append("// codechecker_confirmed [" +
+                                          "unix.Malloc" + "] This is a bug.\n")
+
+                        # Append before line
+                        if(i < len(lines) - 1 and "core.NullDereference" in tempCheckers and
+                           "printIntLine" in lines[i]):
+                            lines2.append("// codechecker_confirmed [" +
+                                          "core.NullDereference" + "] " +
+                                          "This is a bug.\n")
+
+                        if("unix.Malloc" in tempCheckers and "#endif /* OMITBAD */" in lines[i]):
+                            temp = False
+
+                        if("unix.Malloc" in tempCheckers and "#ifndef OMITBAD" in lines[i]):
+                            temp = True
+
+                        if(temp and "}" in lines[i]):
+                            lines2.append("// codechecker_confirmed [" +
+                                          "unix.Malloc" + "] This is a bug.\n")
+
+                        lines2.append(lines[i])
+                        if(i < len(lines) - 1 and "/* POTENTIAL FLAW" in lines[i] and
+                           "// codechecker_confirmed" not in lines[i+1]):
+                            lines2.append("// codechecker_confirmed [" +
+                                          tempCheckers + "] This is a bug.\n")
+
+                    tempNewFile = "".join(lines2)
                     fileToBug = open(newPath, "w")
                     fileToBug.write(tempNewFile)
                     fileToBug.close()
@@ -185,7 +235,6 @@ def addCodeCheckerFlagToCFlags(path):
 
 
 def workFunction(idN):
-    global a
     codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
@@ -237,6 +286,13 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
         fn = toRunAndBugs[idN]
         for i in d["reports"]:
+            if("CWE" not in i):
+                # We only take into account files which have bugs and flaws
+                continue
+            if(i["checker_name"] not in checkers):
+                # TODO Test it out
+                continue
+
             if(i["review_status"] == "confirmed"):
                 tp += 1
                 fn -= 1
@@ -266,7 +322,7 @@ def runCodeCheckerStatistics(toRun, toRunAndBugs):
 
 
 def readPickle():
-    with open('rates.pickle', 'rb') as handle:
+    with open('ratesJTS.pickle', 'rb') as handle:
         b = pickle.load(handle)
 
     tp = 0
@@ -274,14 +330,18 @@ def readPickle():
     fp = 0
     fn = 0
     array = []
+
+    print(len(b))
     for idN, j in b.items():
         tp += j[1][0]
         tn += j[1][1]
         fp += j[1][2]
         fn += j[1][3]
 
-    array.append([tp/(tp+fn), tn/(tn+fp),
-                  fn/(fn+tp), fp/(fp+tn)])
+    array.append([round(tp/(tp+fn), 3), round(tn/(tn+fp), 3),
+                  round(fn/(fn+tp), 3), round(fp/(fp+tn), 3),
+                  int(tp), int(tn), int(fp), int(fn)])
+
     print(array)
 
 
@@ -324,13 +384,13 @@ def runCodeChecker3(toRun):
 
 
 def runCodeChecker(toRun):
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(1)#multiprocessing.cpu_count())
     pool.starmap(runCodeCheckerHelper, toRun.items())
     pool.close()
 
 
 def runCodeCheckerHelper(idN, checkers):
-    codeChecker = RunCodeChecker()
+    codeChecker = RunCodeChecker(extraCommands="--file *CWE*")
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
@@ -355,12 +415,24 @@ def runCodeCheckerHelper(idN, checkers):
     pathOut = os.path.join(reportPath, idN)
     pathOutGood = os.path.join(pathOut, "GOOD")
 
+    pathEGraph = os.path.join(baseDir, Variables.DATA_FOLDER, "codeCheckerEGraph.txt")
+    f = open(pathEGraph, "w")
+    f.write("-Xclang -analyzer-dump-egraph=graphGOOD.dot")
+    f.close()
+
+
+
     print("Running codechecker analysis (good) for " + idN)
     codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
     codeChecker.convertJSON(pathOut, "GOOD")
 
     pathOutBad = os.path.join(pathOut, "BAD")
     print("Running codechecker analysis (bad) for " + idN)
+
+    f = open(pathEGraph, "w")
+    f.write("-Xclang -analyzer-dump-egraph=graphBAD.dot")
+    f.close()
+
     codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
     codeChecker.convertJSON(pathOut, "BAD")
 
@@ -406,11 +478,24 @@ if __name__ == '__main__':
                         "For example: -s 240782 111866")
 
     parser.add_argument("--ignore", action="store_true",
-                        help="run statistics. " +
-                        "Ignore already ran reports")
+                        help="Ignore already ran reports")
+
+    parser.add_argument("--output",
+                        help="Output reports in format." +
+                        "For example: --output html or --output json")
+
+    readPickle()
 
     args = parser.parse_args()
 
+    print(args.output)
+
+    if(args.output is not None and (args.output == "html" or args.output == "json")):
+        RunCodeChecker.export = args.output
+
+    a = RunCodeChecker()
+
+    raise NotImplementedError
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
     if(args.b is not None):
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
@@ -418,14 +503,22 @@ if __name__ == '__main__':
     if(not args.o and not args.i and not args.r and not args.s):
         m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, True)
 
+        # TODO: Remove
+        #print(len(m))
+        #test111 = random.sample(m.keys(), 100)
+        #print(" ".join([a.split("-")[0] for a in test111]))
+
+        #raise NotImplementedError
         if(args.ignore is not None):
             for k in filterIds():
                 m.pop(k, None)
 
         interceptBuildForJulietTestSuite(m.keys())
         runCodeChecker(m)
-        runCodeCheckerStatistics(m, toRunAndBugs)
-        readPickle()
+        # TODO: Decomment
+        #runCodeCheckerStatistics(m, toRunAndBugs)
+        #readPickle()
+        #print("test")
         exit(0)
 
     m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, args.o)

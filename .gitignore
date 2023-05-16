@@ -5,3 +5,11 @@ workdir/
 reports
 tests.sh
 *.zip
+
+
+data/previousRun/
+
+data/syzbotData.pickle
+data/syzbotData1.pickle
+data/syzbotData2.pickle
+data/syzbotData3.pickle

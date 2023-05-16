@@ -352,9 +352,9 @@ def runCodeCheckerStatistics(mappings):
         array = [checkers]
         # TODO: Check this out
         array.append([tp, tn, fp, fn,
-                      tp/(tp+fn),
-                      fn/(fn+tp),
-                      fp/(tp+tn+fp+fn)])
+                      round(tp/(tp+fn), 3),
+                      round(fn/(fn+tp), 3),
+                      round(fp/(tp+tn+fp+fn), 3)])
 
         rates[idN] = array
 
@@ -377,8 +377,11 @@ def readPickle():
         fp += j[1][2]
         fn += j[1][3]
 
-    array.append([tp/(tp+fn), tn/(tn+fp),
-                  fn/(fn+tp), fp/(fp+tn)])
+    array.append([round(tp/(tp+fn), 3),
+                  round(fn/(fn+tp), 3),
+                  round(fp/(tp+tn+fp+fn), 3),
+                  int(tp), int(tn), int(fp), int(fn)])
+
     print(array)
 
 

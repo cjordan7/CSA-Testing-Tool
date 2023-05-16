@@ -1,4 +1,4 @@
-CWE-823, CWE-822, CWE-688, CWE-628, CWE-457:core.CallAndMessage
+CWE-457, CWE-823, CWE-822, CWE-688, CWE-628, CWE-457:core.CallAndMessage
 CWE-369: core.DivideZero
 CWE-233: core.NonNullParamChecker
 CWE-476, CWE-690: core.NullDereference
@@ -13,8 +13,8 @@ CWE-908: core.uninitialized.UndefReturn
 core.uninitialized.NewArraySize
 cplusplus
 cplusplus.InnerPointer
-CWE-763, CWE-416, CWE-415: cplusplus.NewDelete
-CWE-401: cplusplus.NewDeleteLeaks
+CWE-401, CWE-416, CWE-763, CWE-416, CWE-415: cplusplus.NewDelete
+CWE-401, CWE-416: cplusplus.NewDeleteLeaks
 cplusplus.PlacementNewChecker
 cplusplus.SelfAssignment
 cplusplus.StringChecker
@@ -27,17 +27,17 @@ optin.performance.GCDAntipattern
 optin.performance.Padding
 optin.portability.UnixAPI
 CWE-1077: security.FloatLoopCounter
-CWE-477, CWE-252: security.insecureAPI.UncheckedReturn
-CWE-477, CWE-676: security.insecureAPI.bcmp
-CWE-477, CWE-676: security.insecureAPI.bcopy
-CWE-477, CWE-676: security.insecureAPI.bzero
-CWE-477, CWE-676: security.insecureAPI.getpw
-CWE-676, CWE-242: security.insecureAPI.gets
-CWE-676: security.insecureAPI.mkstemp
-CWE-377, CWE-676: security.insecureAPI.mktemp
-CWE-338, CWE-676: security.insecureAPI.rand
-CWE-119, CWE-676: security.insecureAPI.strcpy
-CWE-477, CWE-676: security.insecureAPI.vfork
+CWE-242, CWE-477, CWE-252: security.insecureAPI.UncheckedReturn
+CWE-242, CWE-477, CWE-676: security.insecureAPI.bcmp
+CWE-242, CWE-477, CWE-676: security.insecureAPI.bcopy
+CWE-242, CWE-477, CWE-676: security.insecureAPI.bzero
+CWE-242, CWE-477, CWE-676: security.insecureAPI.getpw
+CWE-242, CWE-676, CWE-242: security.insecureAPI.gets
+CWE-242, CWE-676: security.insecureAPI.mkstemp
+CWE-242, CWE-377, CWE-676: security.insecureAPI.mktemp
+CWE-242, CWE-338, CWE-676: security.insecureAPI.rand
+CWE-242, CWE-119, CWE-676: security.insecureAPI.strcpy
+CWE-242, CWE-477, CWE-676: security.insecureAPI.vfork
 security.insecureAPI.DeprecatedOrUnsafeBufferHandling (C)
 CWE-131, CWE-242: unix.API
 CWE-125, CWE-120, CWE-763, CWE-672, CWE-244, CWE-416, CWE-401, CWE-590, CWE-761, CWE-770, CWE-415: unix.Malloc
@@ -58,7 +58,7 @@ alpha.clone.CloneChecker
 alpha.core
 alpha.core.BoolAssignment
 CWE-667: alpha.core.C11Lock
-CWE-825, CWE-824, CWE-825, CWE-457:alpha.core.CallAndMessageUnInitRefArg
+CWE-457, CWE-825, CWE-824, CWE-825, CWE-457:alpha.core.CallAndMessageUnInitRefArg
 alpha.core.CastSize
 CWE-588: alpha.core.CastToStruct
 CWE-843, CWE-681, CWE-194, CWE-196, CWE-195: alpha.core.Conversion
@@ -85,7 +85,8 @@ alpha.fuchsia.Lock
 alpha.llvm
 alpha.llvm.Conventions
 alpha.security
-CWE-119, CWE-193, CWE-170, CWE-805, CWE-824, CWE-125, CWE-120, CWE-123, CWE-788, CWE-787, CWE-190, CWE-126, CWE-121, CWE-124, CWE-680, CWE-127:alpha.security.ArrayBoundV2
+CWE-122, CWE-121: security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+CWE-122, CWE-119, CWE-193, CWE-170, CWE-805, CWE-824, CWE-125, CWE-120, CWE-123, CWE-788, CWE-787, CWE-190, CWE-126, CWE-124, CWE-680, CWE-127:alpha.security.ArrayBoundV2
 CWE-190, CWE-122: alpha.security.MallocOverflow
 alpha.security.MmapWriteExec
 CWE-466:alpha.security.ReturnPtrRange
@@ -94,7 +95,7 @@ alpha.security.cert.pos
 alpha.security.cert.pos.34c
 alpha.security.cert.env
 alpha.security.cert.env.InvalidPtr
-CWE-201, CWE-20, CWE-78, CWE-606, CWE-134, CWE-377, CWE-114, CWE-789: alpha.security.taint
+CWE-242, CWE-477, CWE-252, CWE-201, CWE-20, CWE-78, CWE-606, CWE-134, CWE-377, CWE-114, CWE-789: alpha.security.taint
 CWE-201, CWE-20, CWE-78, CWE-606, CWE-134, CWE-377, CWE-114, CWE-789:alpha.security.taint.TaintPropagation
 alpha.unix
 alpha.unix.StdCLibraryFunctionArgs
@@ -106,10 +107,10 @@ alpha.unix.SimpleStream
 alpha.unix.Stream
 alpha.unix.cstring.BufferOverlap
 alpha.unix.cstring.NotNullTerminated
-alpha.unix.cstring.OutOfBounds
+CWE-122: alpha.unix.cstring.OutOfBounds
 alpha.unix.cstring.UninitializedRead
 alpha.nondeterminism.PointerIteration
-alpha.nondeterminism.PointerSorting (C++)
+alpha.nondeterminism.PointerSorting
 alpha.WebKit
 alpha.webkit.UncountedCallArgsChecker
 alpha.webkit.UncountedLocalVarsChecker
