@@ -5,14 +5,15 @@ import pickle
 
 import argparse
 from argparse import RawTextHelpFormatter
+from itertools import repeat
 
-from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
+import runCodeChecker
 
-# TODO: Remove
-import random
+
+export = "html"
 
 
 # This class represent only a bug (CWE) at a precise line of a file
@@ -235,7 +236,7 @@ def addCodeCheckerFlagToCFlags(path):
 
 
 def workFunction(idN):
-    codeChecker = RunCodeChecker()
+    codeChecker = RunCodeChecker(export)
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
@@ -260,7 +261,7 @@ def interceptBuildForJulietTestSuite(toRun):
     pool.close()
 
 
-def runCodeCheckerStatistics(toRun, toRunAndBugs):
+def callCodeCheckerStatistics(toRun, toRunAndBugs):
     baseDir = os.path.dirname(os.path.realpath(__file__))
     reportPath = os.path.join(baseDir,
                               Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
@@ -360,8 +361,8 @@ def filterIds():
     return filtered
 
 
-def runCodeChecker3(toRun):
-    codeChecker = RunCodeChecker()
+def callCodeChecker3(toRun):
+    codeChecker = RunCodeChecker(export)
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
@@ -383,33 +384,30 @@ def runCodeChecker3(toRun):
         codeChecker.convertJSON(pathOut, "BAD")
 
 
-def runCodeChecker(toRun):
+def callCodeChecker(toRun):
+    # TODO
+    print(len(toRun.items()))
+    print(len(toRun))
+
+    temp = [e + (export,) for e in toRun.items()]
+
+    print(temp)
+    # raise NotImplementedError
+
     pool = multiprocessing.Pool(1)#multiprocessing.cpu_count())
-    pool.starmap(runCodeCheckerHelper, toRun.items())
+
+    pool.starmap(callCodeCheckerHelper, temp)
     pool.close()
 
 
-def runCodeCheckerHelper(idN, checkers):
-    codeChecker = RunCodeChecker(extraCommands="--file *CWE*")
+def callCodeCheckerHelper(idN, checkers, export):
+    #raise Exception(export)
+    codeChecker = RunCodeChecker(export, extraCommands="--file *CWE*")
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathJTS = os.path.join(baseDir, Variables.DATA_JULIETTESTSUITE_WORKDIR)
 
     reportPath = os.path.join(baseDir,
                               Variables.DATA_JULIETTESTSUITE_REPORT_DIR)
-
-    #for idN, checkers in toRun.items():
-        #pathIn = os.path.join(pathJTS, idN)
-        #pathOut = os.path.join(reportPath, idN)
-        #pathOutGood = os.path.join(pathOut, "GOOD")
-        #
-        #print("Running codechecker analysis (good) for " + idN)
-        #codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
-        #codeChecker.convertJSON(pathOut, "GOOD")
-        #
-        #pathOutBad = os.path.join(pathOut, "BAD")
-        #print("Running codechecker analysis (bad) for " + idN)
-        #codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
-        #codeChecker.convertJSON(pathOut, "BAD")
 
     pathIn = os.path.join(pathJTS, idN)
     pathOut = os.path.join(reportPath, idN)
@@ -420,11 +418,9 @@ def runCodeCheckerHelper(idN, checkers):
     f.write("-Xclang -analyzer-dump-egraph=graphGOOD.dot")
     f.close()
 
-
-
     print("Running codechecker analysis (good) for " + idN)
     codeChecker.runCodeChecker(pathIn, pathOutGood, checkers, "GOOD")
-    codeChecker.convertJSON(pathOut, "GOOD")
+    codeChecker.convertTo(pathOut, "GOOD")
 
     pathOutBad = os.path.join(pathOut, "BAD")
     print("Running codechecker analysis (bad) for " + idN)
@@ -434,7 +430,7 @@ def runCodeCheckerHelper(idN, checkers):
     f.close()
 
     codeChecker.runCodeChecker(pathIn, pathOutBad, checkers, "BAD")
-    codeChecker.convertJSON(pathOut, "BAD")
+    codeChecker.convertTo(pathOut, "BAD")
 
 
 if __name__ == '__main__':
@@ -487,15 +483,11 @@ if __name__ == '__main__':
     readPickle()
 
     args = parser.parse_args()
-
-    print(args.output)
-
     if(args.output is not None and (args.output == "html" or args.output == "json")):
-        RunCodeChecker.export = args.output
+        #RunCodeChecker.export = args.output
+        export = args.output
 
-    a = RunCodeChecker()
-
-    raise NotImplementedError
+    #raise Exception(export)
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
     if(args.b is not None):
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
@@ -514,7 +506,9 @@ if __name__ == '__main__':
                 m.pop(k, None)
 
         interceptBuildForJulietTestSuite(m.keys())
-        runCodeChecker(m)
+        #raise Exception(export)
+        callCodeChecker(m)
+
         # TODO: Decomment
         #runCodeCheckerStatistics(m, toRunAndBugs)
         #readPickle()
@@ -531,8 +525,8 @@ if __name__ == '__main__':
         interceptBuildForJulietTestSuite(m.keys())
 
     if(args.r):
-        runCodeChecker(m)
+        callCodeChecker(m)
 
     if(args.s):
-        runCodeCheckerStatistics(m, toRunAndBugs)
+        callCodeCheckerStatistics(m, toRunAndBugs)
         readPickle()

@@ -13,6 +13,7 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
+export = "html"
 
 def getCWEs():
     fileCWEsMapped = dict()
@@ -146,7 +147,7 @@ def getMappings():
 
 
 def workFunction(pathCGC):
-    codeChecker = RunCodeChecker()
+    codeChecker = RunCodeChecker(export)
 
     path = os.path.join(pathCGC)
 
@@ -201,7 +202,7 @@ def createCompilationDatabases2(mappings):
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathBuildSH = os.path.join(baseDir, Variables.DATA_FOLDER)
     pathBuildSH = os.path.join(pathBuildSH, "cgcBuild.sh")
-    runCodeChecker = RunCodeChecker()
+    runCodeChecker = RunCodeChecker(export)
 
     for key, tupl in mappings.items():
         makefilePath = os.path.join(key, "Makefile")
@@ -241,7 +242,7 @@ def createCompilationDatabasesHelper(key):
     baseDir = os.path.dirname(os.path.realpath(__file__))
     pathBuildSH = os.path.join(baseDir, Variables.DATA_FOLDER)
     pathBuildSH = os.path.join(pathBuildSH, "cgcBuild.sh")
-    runCodeChecker = RunCodeChecker()
+    runCodeChecker = RunCodeChecker(export)
 
     makefilePath = os.path.join(key, "Makefile")
 
@@ -280,7 +281,7 @@ def createCompilationDatabasesHelper(key):
 def runCodeChecker(mappings):
     # print(mappings)
     baseDir = os.path.dirname(os.path.realpath(__file__))
-    runCodeChecker = RunCodeChecker()
+    runCodeChecker = RunCodeChecker(export)
     cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
                "NRFIN_00006", "YAN01_00009"]
 
@@ -295,16 +296,16 @@ def runCodeChecker(mappings):
                 name = subf.split("/")[-2] + "_" + subf.split("/")[-1]
                 pathReport2 = os.path.join(pathReport, name)
                 if(len(checkers) != 0):
-                    print("CzGC: Run codechecker for " + name)
+                    print("CGC: Run codechecker for " + name)
                     runCodeChecker.runCodeChecker(subf, pathReport2, checkers, "")
-                    runCodeChecker.convertJSON(pathReport, name)
+                    runCodeChecker.convertTo(pathReport, name)
         else:
             name = os.path.basename(os.path.normpath(key))
             pathReport2 = os.path.join(pathReport, name)
             if(len(checkers) != 0):
                 print("CGC: Run codechecker for " + name)
                 runCodeChecker.runCodeChecker(key, pathReport2, checkers, "")
-                runCodeChecker.convertJSON(pathReport, name)
+                runCodeChecker.convertTo(pathReport, name)
 
 
 def runCodeCheckerStatistics(mappings):
@@ -425,9 +426,16 @@ if __name__ == '__main__':
                         help="run statistics. " +
                         "For example: -s KPRCA_00048 NRFIN_00042")
 
+    parser.add_argument("--output",
+                        help="Output reports in format." +
+                        "For example: --output html or --output json")
+
     args = parser.parse_args()
 
     mappings = {}
+    if(args.output is not None and (args.output == "html" or args.output == "json")):
+        #RunCodeChecker.export = args.output
+        export = args.output
 
     if(args.b is not None):
         mappings = getBugsForIds(getMappings(), args.b)
@@ -440,7 +448,6 @@ if __name__ == '__main__':
         runCodeChecker(mappings)
         exit(0)
 
-    # print(mappings)
     if(args.i):
         applyPatch()
         createCompilationDatabases(mappings)

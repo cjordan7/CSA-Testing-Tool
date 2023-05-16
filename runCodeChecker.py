@@ -3,6 +3,8 @@ import os
 
 from variables import Variables
 
+export = "html"
+
 
 class InterceptBuild():
     @staticmethod
@@ -11,9 +13,8 @@ class InterceptBuild():
 
 
 class RunCodeChecker():
-
-    def __init__(self, extraCommands=""):
-        self.export = "json"
+    def __init__(self, export, extraCommands=""):
+        self.export = export
         self.extraCommands = extraCommands
         self.codeCheckerLog = "CodeChecker log -o compile_commands.json -b "
         self.interceptBuild = "intercept-build --override-compiler make CC=intercept-cc CXX=intercept-c++"
@@ -99,8 +100,15 @@ class RunCodeChecker():
         # TODO Replace by enum
         # TODO: Redirect output to nothing
         # TODO: Export json
+
+        outputName = "_report"
+        if(self.export == "json"):
+            outputName = ".json"
+
+        print("Here ========================")
+        print(self.export)
         subprocess.run("CodeChecker parse --export " + self.export +
-                       " --output " + "./" + extraName + ".json ./" +
+                       " --output " + "./" + extraName + outputName + " ./" +
                        extraName, shell=True, cwd=reportPath)
 
     def convertJSON(self, reportPath, extraName):
