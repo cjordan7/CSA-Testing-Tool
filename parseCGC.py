@@ -147,7 +147,7 @@ def getMappings():
 
 
 def workFunction(pathCGC):
-    codeChecker = RunCodeChecker(export)
+    codeChecker = RunCodeChecker(export, extraCommands="--file */src/* */include/*")
 
     path = os.path.join(pathCGC)
 
