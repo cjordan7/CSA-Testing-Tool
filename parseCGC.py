@@ -13,7 +13,7 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
-export = "html"
+export = "json"
 
 
 def getCWEs():
@@ -419,12 +419,6 @@ if __name__ == '__main__':
         mappings = getBugsForIds(getMappings(), args.b)
     else:
         mappings = getMappings()
-
-    for i, j in mappings.items():
-        path = os.path.normpath(i)
-        if(len(j[0]) > 0):
-            print("\"" + path.split(os.sep)[-1] + "\": [\"\", " + str(j[0]) + ", " + str(j[1])+"],")
-    raise NotImplementedError
 
     if(not args.o and not args.i and not args.r and not args.s):
         applyPatch()

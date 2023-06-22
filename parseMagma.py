@@ -95,7 +95,6 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
     #codeChecker = RunCodeChecker()
     baseDir = os.path.dirname(os.path.realpath(__file__))
 
-    # TODO: Change!!!
     pathIn = os.path.join(baseDir, "workdir", "magma_libs")
     pathReport = os.path.join(baseDir, Variables.DATA_MAGMA_REPORT_DIR)
 
@@ -104,7 +103,7 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
     analyzedFiles = dict()
     for sub in subfolders:
         tp = 0
-        #tn = 0 # We don't know
+        # tn = 0 # We don't know
         fp = 0
         fn = 0
 
@@ -118,7 +117,6 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
 
         findableBugForLib = findableBugs[lib]
         numberOfBugs = len(findableBugs)
-        #l = mappingLibsCheckers[lib]
 
         for h in js["reports"]:
             temp = []
@@ -149,7 +147,7 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
             start = lines[0][0]
             end = lines[0][0]
             i = 0
-            #for line, filePath in lines:
+
             hasFoundBug = False
             for line, filePath in lines:
                 currentFilePath = filePath
@@ -160,14 +158,11 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
 
                 if(line in metadata[filePath]):
                     if(any("Entering loop body" in str(k) for k in metadata[filePath][line])):
-                        #start = lines[i][0]
                         end = lines[i][0]
                     elif(any("Assuming the condition" in str(k) for k in metadata[filePath][line])):
                         metadata[filePath][line][0] += 1
                         condition = metadata[filePath][line][0]
-                        # TODO: Replace by better check of if
                         if("if" in analyzedFiles[filePath][line-1]):
-                            #if("if" in metadata[filePath][line][condition]):
                             start = lines[i][0]
                             end = lines[i][0]
                     elif(any("Calling" in str(k) for k in metadata[filePath][line])):
@@ -182,7 +177,6 @@ def runCodeCheckerStatistics(mappingLibsCheckers, findableBugs):
                             end = lines[i][0]
                         else:
                             end = lines[i][0]
-                        # TODO Change file
                     elif(any("Entered" in str(i) for i in metadata[filePath][line])):
                             end = lines[i][0]
                     else:
@@ -361,8 +355,8 @@ if __name__ == '__main__':
         libsPatches = addCommentsToPatches()
         createCompilationDatabases(mappingLibsCheckers, libsPatches,
                                    findableBugs, runOnlyLibs)
-        #runCodeChecker(findableBugs)
-        #runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
+        runCodeChecker(findableBugs)
+        runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)
         exit(0)
 
     if(args.i):
@@ -370,9 +364,8 @@ if __name__ == '__main__':
         createCompilationDatabases(mappingLibsCheckers, libsPatches,
                                    findableBugs, runOnlyLibs)
 
-    #if(args.r):
-        #runCodeChecker(findableBugs)
+    if(args.r):
+        runCodeChecker(findableBugs)
 
-    #if(args.s):
-        #runCodeCheckerStatistics(m, toRunAndBugs)
-        #readPickle()
+    if(args.s):
+        runCodeCheckerStatistics(mappingLibsCheckers, findableBugs)

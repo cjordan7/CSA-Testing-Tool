@@ -116,7 +116,6 @@ def addFlagsToFiles(bugsMappedInFile, runIt):
             i = 0
             f = False
 
-            # TODO: create func
             for bug in sortedBugs:
                 toRunTotal.add(bug.idN)
                 if(bug.cwe in mappings and not bug.isOnlyWindows):
@@ -289,7 +288,6 @@ def callCodeCheckerStatistics(toRun, toRunAndBugs):
                 continue
 
             if(i["checker_name"] not in checkers):
-                # TODO Test it out
                 continue
 
             if(i["review_status"] == "confirmed"):
