@@ -18,7 +18,6 @@ CWE-401, CWE-416: cplusplus.NewDeleteLeaks
 cplusplus.PlacementNewChecker
 cplusplus.SelfAssignment
 cplusplus.StringChecker
-CWE-1076: deadcode.DeadStores
 optin
 optin.cplusplus.UninitializedObject
 optin.cplusplus.VirtualCall
@@ -38,7 +37,7 @@ CWE-242, CWE-377, CWE-676: security.insecureAPI.mktemp
 CWE-242, CWE-338, CWE-676: security.insecureAPI.rand
 CWE-242, CWE-119, CWE-676: security.insecureAPI.strcpy
 CWE-242, CWE-477, CWE-676: security.insecureAPI.vfork
-security.insecureAPI.DeprecatedOrUnsafeBufferHandling (C)
+CWE-787: security.insecureAPI.DeprecatedOrUnsafeBufferHandling
 CWE-131, CWE-242: unix.API
 CWE-125, CWE-120, CWE-763, CWE-672, CWE-244, CWE-416, CWE-401, CWE-590, CWE-761, CWE-770, CWE-415: unix.Malloc
 unix.MallocSizeof
@@ -80,13 +79,9 @@ alpha.cplusplus.MisusedMovedObject
 alpha.cplusplus.SmartPtr
 CWE-561: alpha.deadcode
 alpha.deadcode.UnreachableCode
-alpha.fuchsia
-alpha.fuchsia.Lock
-alpha.llvm
-alpha.llvm.Conventions
 alpha.security
 CWE-122, CWE-121: security.insecureAPI.DeprecatedOrUnsafeBufferHandling
-CWE-122, CWE-119, CWE-193, CWE-170, CWE-805, CWE-824, CWE-125, CWE-120, CWE-123, CWE-788, CWE-787, CWE-190, CWE-126, CWE-124, CWE-680, CWE-127:alpha.security.ArrayBoundV2
+CWE-129, CWE-122, CWE-119, CWE-193, CWE-170, CWE-805, CWE-824, CWE-125, CWE-120, CWE-123, CWE-788, CWE-787, CWE-190, CWE-126, CWE-124, CWE-680, CWE-127:alpha.security.ArrayBoundV2
 CWE-190, CWE-122: alpha.security.MallocOverflow
 alpha.security.MmapWriteExec
 CWE-466:alpha.security.ReturnPtrRange

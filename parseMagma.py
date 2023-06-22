@@ -357,7 +357,6 @@ if __name__ == '__main__':
     if(args.l is not None):
         runOnlyLibs = args.l
 
-
     if(not args.o and not args.i and not args.r and not args.s):
         libsPatches = addCommentsToPatches()
         createCompilationDatabases(mappingLibsCheckers, libsPatches,

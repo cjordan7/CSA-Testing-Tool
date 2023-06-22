@@ -10,7 +10,7 @@ from runCodeChecker import RunCodeChecker
 from sampleReadCSATable import getCWECheckerMapping
 from variables import Variables
 
-export = "html"
+export = "json"
 
 
 # This class represent only a bug (CWE) at a precise line of a file
@@ -287,6 +287,7 @@ def callCodeCheckerStatistics(toRun, toRunAndBugs):
             if("CWE" not in i):
                 # We only take into account files which have bugs and flaws
                 continue
+
             if(i["checker_name"] not in checkers):
                 # TODO Test it out
                 continue
@@ -310,8 +311,11 @@ def callCodeCheckerStatistics(toRun, toRunAndBugs):
             tn = 0.0
 
         array = [checkers]
-        array.append([tp, tn, fp, fn, tp/(tp+fn), tn/(tn+fp),
-                      fn/(fn+tp), fp/(fp+tn)])
+
+        array.append([tp, tn, fp, fn, tp/(tp+fn) if(tp+fn != 0) else 0,
+                      tn/(tn+fp) if(tn+fp != 0) else 0,
+                      fn/(fn+tp) if(fn+tp != 0) else 0,
+                      fp/(fp+tn) if(fp+tn != 0) else 0])
 
         rates[idN] = array
 
@@ -329,6 +333,7 @@ def readPickle():
     fn = 0
     array = []
 
+    temp = 0
     print(len(b))
     for idN, j in b.items():
         tp += j[1][0]
@@ -336,9 +341,14 @@ def readPickle():
         fp += j[1][2]
         fn += j[1][3]
 
+        if(j[1][0] == 0 and j[1][1] > 0 and j[1][2] == 0 and j[1][3] > 0):
+            temp += 1
+
     array.append([round(tp/(tp+fn), 3), round(tn/(tn+fp), 3),
                   round(fn/(fn+tp), 3), round(fp/(fp+tn), 3),
                   int(tp), int(tn), int(fp), int(fn)])
+
+    print("Fu... " + str(temp))
 
     print(array)
 
@@ -382,14 +392,7 @@ def callCodeChecker3(toRun):
 
 
 def callCodeChecker(toRun):
-    # TODO
-    print(len(toRun.items()))
-    print(len(toRun))
-
     temp = [e + (export,) for e in toRun.items()]
-
-    print(temp)
-    # raise NotImplementedError
 
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
 
@@ -476,14 +479,10 @@ if __name__ == '__main__':
                         help="Output reports in format." +
                         "For example: --output html or --output json")
 
-    readPickle()
-
     args = parser.parse_args()
     if(args.output is not None and (args.output == "html" or args.output == "json")):
-        #RunCodeChecker.export = args.output
         export = args.output
 
-    #raise Exception(export)
     bugsMappedInFile = getBugsAssociatedWithJulietTestSuite()
     if(args.b is not None):
         bugsMappedInFile = getBugsForIds(bugsMappedInFile, args.b)
@@ -491,24 +490,16 @@ if __name__ == '__main__':
     if(not args.o and not args.i and not args.r and not args.s):
         m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, True)
 
-        # TODO: Remove
-        #print(len(m))
-        #test111 = random.sample(m.keys(), 100)
-        #print(" ".join([a.split("-")[0] for a in test111]))
-
-        #raise NotImplementedError
         if(args.ignore is not None):
             for k in filterIds():
                 m.pop(k, None)
 
         interceptBuildForJulietTestSuite(m.keys())
-        #raise Exception(export)
         callCodeChecker(m)
 
-        # TODO: Decomment
-        #runCodeCheckerStatistics(m, toRunAndBugs)
-        #readPickle()
-        #print("test")
+        if(export == "json"):
+            callCodeCheckerStatistics(m, toRunAndBugs)
+            readPickle()
         exit(0)
 
     m, e, toRunAndBugs = addFlagsToFiles(bugsMappedInFile, args.o)
@@ -523,6 +514,6 @@ if __name__ == '__main__':
     if(args.r):
         callCodeChecker(m)
 
-    if(args.s):
+    if(args.s and export == "json"):
         callCodeCheckerStatistics(m, toRunAndBugs)
         readPickle()

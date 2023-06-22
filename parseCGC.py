@@ -15,6 +15,7 @@ from variables import Variables
 
 export = "html"
 
+
 def getCWEs():
     fileCWEsMapped = dict()
     print("CGC: Collecting bugs (CWEs, lines, urls) from Juliet Test Suite.")
@@ -156,16 +157,9 @@ def workFunction(pathCGC):
     codeChecker.compileDB(path, "PATCHED")
     codeChecker.compileDB(path, "")
 
-    # codeChecker.runInterceptBuild(path, makeGood, "GOOD")
-    # codeChecker.runInterceptBuild(path, makeBad, "BAD")
-
 
 def interceptBuildForJulietTestSuite(toRun):
     print("Run codechecker for juliet test suite")
-
-    # TODO: Remove?
-    # for idN in toRun:
-    #    workFunction(codeChecker, pathJTS, idN)
 
     pool = multiprocessing.Pool(multiprocessing.cpu_count())
     pool.map(workFunction, toRun)
@@ -244,8 +238,6 @@ def createCompilationDatabasesHelper(key):
     pathBuildSH = os.path.join(pathBuildSH, "cgcBuild.sh")
     runCodeChecker = RunCodeChecker(export)
 
-    makefilePath = os.path.join(key, "Makefile")
-
     cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
                "NRFIN_00006", "YAN01_00009"]
 
@@ -265,17 +257,7 @@ def createCompilationDatabasesHelper(key):
         print("CGC: Creating compilation database for " + name)
         subprocess.run("bash " + pathBuildSH +
                        " TargetName cc", shell=True, cwd=key)
-        #runCodeChecker.compileDB(key, "make", "")
         runCodeChecker.runInterceptBuild(key, "make", "")
-    #f = open(makefilePath)
-    #f.close
-
-    #f = open(makefilePath, "r")
-    #lines = f.readlines()
-    #f.close
-    #for lineN in range(0, len(lines)):
-    #    if("include" in lines[lineN]):
-    #        lines[lineN] = "# " + lines[lineN]
 
 
 def runCodeChecker(mappings):
@@ -318,16 +300,14 @@ def runCodeCheckerStatistics(mappings):
     cbsOnly = ["KPRCA_00024", "KPRCA_00048", "KPRCA_00016",
                "NRFIN_00006", "YAN01_00009"]
     for idN, tupl in mappings.items():
-        checkers = tupl[1]
+        checkerNumber = tupl[1]
+        checkers = tupl[0]
         name = idN.split("/")[-1]
+
         if(any(i in idN for i in cbsOnly)):
             name = idN.split("/")[-2] + "_" + name
         name += ".json"
         pathOut = os.path.join(reportPath, name)
-        print(pathOut)
-        print(idN)
-        print("JTS: Statistics for " + name)
-        print(name)
         tp = 0
         tn = 0
         fp = 0
@@ -340,18 +320,19 @@ def runCodeCheckerStatistics(mappings):
         print(len(d["reports"]))
         f.close()
 
-        fn = len(d["reports"]) + tupl[1]
+        fn = len(d["reports"]) + checkerNumber
 
         for i in d["reports"]:
+            if(i["checker_name"] not in checkers):
+                continue
+
             if(i["review_status"] == "confirmed"):
                 tp += 1
                 fn -= 1
-                print("euhh")
             else:
                 fp += 1
 
         array = [checkers]
-        # TODO: Check this out
         array.append([tp, tn, fp, fn,
                       round(tp/(tp+fn), 3),
                       round(fn/(fn+tp), 3),
@@ -372,6 +353,7 @@ def readPickle():
     fp = 0
     fn = 0
     array = []
+
     for idN, j in b.items():
         tp += j[1][0]
         tn += j[1][1]
@@ -382,8 +364,6 @@ def readPickle():
                   round(fn/(fn+tp), 3),
                   round(fp/(tp+tn+fp+fn), 3),
                   int(tp), int(tn), int(fp), int(fn)])
-
-    print(array)
 
 
 if __name__ == '__main__':
@@ -431,16 +411,20 @@ if __name__ == '__main__':
                         "For example: --output html or --output json")
 
     args = parser.parse_args()
-
     mappings = {}
     if(args.output is not None and (args.output == "html" or args.output == "json")):
-        #RunCodeChecker.export = args.output
         export = args.output
 
     if(args.b is not None):
         mappings = getBugsForIds(getMappings(), args.b)
     else:
         mappings = getMappings()
+
+    for i, j in mappings.items():
+        path = os.path.normpath(i)
+        if(len(j[0]) > 0):
+            print("\"" + path.split(os.sep)[-1] + "\": [\"\", " + str(j[0]) + ", " + str(j[1])+"],")
+    raise NotImplementedError
 
     if(not args.o and not args.i and not args.r and not args.s):
         applyPatch()
@@ -455,6 +439,6 @@ if __name__ == '__main__':
     if(args.r):
         runCodeChecker(mappings)
 
-    if(args.s):
+    if(args.s and export == "json"):
         runCodeCheckerStatistics(mappings)
         readPickle()
